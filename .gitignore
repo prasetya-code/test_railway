@@ -1,5 +1,13 @@
 # env
 win_env
 
-# issue
+# Python
+**__pycache__
+*.pyc
+
+# issue & PR
 issue.md
+pr.md
+
+# VSCode
+.vscode/
