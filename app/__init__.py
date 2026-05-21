@@ -1,2 +1,2 @@
 def create_app():
-    return 'hello'
+    return "hello"

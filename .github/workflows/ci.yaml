@@ -156,11 +156,11 @@ jobs:
       # ===================================================
       # STEP: Ruff format validation
       # ===================================================
-      # - name: Check Ruff Formatting
+      - name: Check Ruff Formatting
 
-      #   run: |
+        run: |
 
-      #     ruff format --check .
+          ruff format --check .
 
       # ===================================================
       # STEP: Format validation
