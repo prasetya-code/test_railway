@@ -1,4 +1,4 @@
-name: Python CI
+name: railways test CI
 
 on:
   push:
