@@ -1,0 +1,9 @@
+# env
+win_env
+
+# Python Cache
+**__pycache__
+*.pyc
+
+# VSCode
+.vscode/
