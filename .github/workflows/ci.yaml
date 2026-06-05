@@ -44,15 +44,11 @@ jobs:
           pip install -r requirements.txt
 
       # Menjalankan linting
-      - name: Run Lint
-
-        # Menjalankan shell command
+      - name: Run Ruff
         run: |
-          flake8 .
+          ruff check .
 
       # Menjalankan unit test
       - name: Run Tests
-
-        # Menjalankan shell command
         run: |
           pytest
