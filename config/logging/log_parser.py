@@ -130,17 +130,8 @@ DEFAULT_EXTRA = {
 # CENTRALIZED LOGGERS
 # =========================================================
 
-app_logger = setup_logger(
-    logger_name="APP",
-    fields=APP_FIELDS
-)
+app_logger = setup_logger(logger_name="APP", fields=APP_FIELDS)
 
-access_logger = setup_logger(
-    logger_name="ACCESS",
-    fields=ACCESS_FIELDS
-)
+access_logger = setup_logger(logger_name="ACCESS", fields=ACCESS_FIELDS)
 
-security_logger = setup_logger(
-    logger_name="SECURITY",
-    fields=SECURITY_FIELDS
-)
+security_logger = setup_logger(logger_name="SECURITY", fields=SECURITY_FIELDS)

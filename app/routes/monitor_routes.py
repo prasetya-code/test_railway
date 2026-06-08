@@ -68,12 +68,12 @@ def build_redis_response():
         dependencies = {
             "redis_cache": {
                 "status": "disabled",
-                "message": "Redis cache is disabled via GLOBAL_REDIS"
+                "message": "Redis cache is disabled via GLOBAL_REDIS",
             },
             "redis_limiter": {
                 "status": "disabled",
-                "message": "Redis limiter is disabled via GLOBAL_REDIS"
-            }
+                "message": "Redis limiter is disabled via GLOBAL_REDIS",
+            },
         }
 
         return {
@@ -81,12 +81,10 @@ def build_redis_response():
             "mode": "no-redis",
             "reason": "Redis is globally disabled",
             "redis_enabled": False,
-
             "service": APP_NAME,
             "version": APP_VERSION,
             "uptime": get_uptime(),
-
-            "dependencies": dependencies
+            "dependencies": dependencies,
         }, 200
 
     # =========================
@@ -95,10 +93,7 @@ def build_redis_response():
     cache_dep = build_dependency("CACHE", "cache")
     limit_dep = build_dependency("LIMIT", "limit")
 
-    dependencies = {
-        "redis_cache": cache_dep,
-        "redis_limiter": limit_dep
-    }
+    dependencies = {"redis_cache": cache_dep, "redis_limiter": limit_dep}
 
     cache_status = cache_dep["status"]
     limit_status = limit_dep["status"]
@@ -132,12 +127,10 @@ def build_redis_response():
         "mode": "redis",
         "reason": reason,
         "redis_enabled": True,
-
         "service": APP_NAME,
         "version": APP_VERSION,
         "uptime": get_uptime(),
-
-        "dependencies": dependencies
+        "dependencies": dependencies,
     }, http_code
 
 
@@ -151,10 +144,7 @@ def check_redis():
         return jsonify(response), code
 
     except Exception as e:
-        return jsonify({
-            "status": "down",
-            "error": str(e)
-        }), 500
+        return jsonify({"status": "down", "error": str(e)}), 500
 
 
 # =========================
@@ -171,7 +161,4 @@ def check_redis_detail():
         return jsonify(response), code
 
     except Exception as e:
-        return jsonify({
-            "status": "down",
-            "error": str(e)
-        }), 500
+        return jsonify({"status": "down", "error": str(e)}), 500

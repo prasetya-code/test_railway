@@ -16,6 +16,8 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: false
+
       matrix:
         python-version: ['3.10', '3.11']
 
@@ -36,6 +38,7 @@ jobs:
         # Parameter action
         with:
           python-version: ${{ matrix.python-version }}
+          cache: pip
 
       # Install dependency project
       - name: Install Dependencies
@@ -43,12 +46,21 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # Menjalankan linting
-      - name: Run Ruff
+      # Menjalankan auto fix Ruff
+      - name: Run Ruff Auto Fix
+        run: |
+          ruff check . --fix
+
+      # Menjalankan formatter Ruff
+      - name: Run Ruff Format
+        run: |
+          ruff format .
+
+      # Verifikasi tidak ada lint error tersisa
+      - name: Run Ruff Check
         run: |
           ruff check .
 
-      # Menjalankan unit test
+      # Menjalankan unit test with pytets.ini
       - name: Run Tests
-        run: |
-          pytest
+        run: pytest

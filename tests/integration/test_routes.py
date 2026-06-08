@@ -12,6 +12,7 @@ class DummyBlueprint:
 # SUCCESS PATH
 # ==========================================================
 
+
 def test_register_routes_success():
     """
     Cover:
@@ -28,11 +29,7 @@ def test_register_routes_success():
     def fake_register(bp):
         registered.append(bp)
 
-    with patch.object(
-        app,
-        "register_blueprint",
-        side_effect=fake_register
-    ):
+    with patch.object(app, "register_blueprint", side_effect=fake_register):
         register_routes(app)
 
     assert len(registered) == 2
@@ -41,6 +38,7 @@ def test_register_routes_success():
 # ==========================================================
 # EXCEPTION PATH
 # ==========================================================
+
 
 @patch("app.routes.traceback.print_exc")
 def test_register_routes_exception(mock_print_exc):
@@ -53,9 +51,7 @@ def test_register_routes_exception(mock_print_exc):
     app = Flask(__name__)
 
     with patch.object(
-        app,
-        "register_blueprint",
-        side_effect=Exception("register failed")
+        app, "register_blueprint", side_effect=Exception("register failed")
     ):
         register_routes(app)
 
@@ -65,6 +61,7 @@ def test_register_routes_exception(mock_print_exc):
 # ==========================================================
 # ERROR MESSAGE PATH
 # ==========================================================
+
 
 @patch("app.routes.traceback.print_exc")
 def test_register_routes_print_message(mock_print_exc):
@@ -77,11 +74,7 @@ def test_register_routes_print_message(mock_print_exc):
     app = Flask(__name__)
 
     with patch("builtins.print") as mock_print:
-        with patch.object(
-            app,
-            "register_blueprint",
-            side_effect=Exception("boom")
-        ):
+        with patch.object(app, "register_blueprint", side_effect=Exception("boom")):
             register_routes(app)
 
     assert mock_print.call_count == 2
@@ -89,10 +82,7 @@ def test_register_routes_print_message(mock_print_exc):
     first_call = mock_print.call_args_list[0]
     second_call = mock_print.call_args_list[1]
 
-    assert (
-        "ROUTE gagal di regis dan inisialisasi di create_app()"
-        in first_call.args[0]
-    )
+    assert "ROUTE gagal di regis dan inisialisasi di create_app()" in first_call.args[0]
 
     assert second_call.args[0] == "ERROR:"
     assert str(second_call.args[1]) == "boom"
@@ -101,6 +91,7 @@ def test_register_routes_print_message(mock_print_exc):
 # ==========================================================
 # VERIFY IMPORTS WORK
 # ==========================================================
+
 
 def test_blueprints_can_be_imported():
     """
@@ -119,6 +110,7 @@ def test_blueprints_can_be_imported():
 # VERIFY TWO BLUEPRINTS REGISTERED
 # ==========================================================
 
+
 def test_register_routes_registers_exactly_two_blueprints():
 
     app = Flask(__name__)
@@ -129,11 +121,7 @@ def test_register_routes_registers_exactly_two_blueprints():
         nonlocal count
         count += 1
 
-    with patch.object(
-        app,
-        "register_blueprint",
-        side_effect=fake_register
-    ):
+    with patch.object(app, "register_blueprint", side_effect=fake_register):
         register_routes(app)
 
     assert count == 2

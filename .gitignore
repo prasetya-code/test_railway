@@ -10,6 +10,8 @@ win_env
 
 # Testing
 .pytest_cache
+.coverage
+coverage.xml
 
 # VSCode
 .vscode/

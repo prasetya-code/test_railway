@@ -1,5 +1,5 @@
-from .cors   import build_cors
-from .cache  import build_cache
+from .cors import build_cors
+from .cache import build_cache
 
 
 def build_api(response, *, allow_public: bool = False):

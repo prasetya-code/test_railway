@@ -76,7 +76,7 @@ def build_isolation(response):
     # BUILD & APPLY
     # =========================================================
 
-    response.headers["Cross-Origin-Opener-Policy"]   = COOP
+    response.headers["Cross-Origin-Opener-Policy"] = COOP
     response.headers["Cross-Origin-Embedder-Policy"] = COEP
     response.headers["Cross-Origin-Resource-Policy"] = CORP
 

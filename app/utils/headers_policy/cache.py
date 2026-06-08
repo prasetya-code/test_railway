@@ -8,7 +8,6 @@ def build_cache(response):
     """
 
     if response.mimetype == "application/json":
-
         # =====================================================
         # JSON / DATA API — dilarang cache
         # Berisi data dinamis atau sensitif per user/session.
@@ -23,7 +22,6 @@ def build_cache(response):
         response.headers["Cache-Control"] = "no-store"
 
     elif response.mimetype == "text/html":
-
         # =====================================================
         # HTML — cache singkat, wajib revalidasi
         # Sering mengandung data user-specific (nama, sesi, CSRF token).
@@ -41,7 +39,6 @@ def build_cache(response):
         response.headers["Cache-Control"] = "private, max-age=0, must-revalidate"
 
     else:
-
         # =====================================================
         # STATIC ASSET — cache agresif
         # JS, CSS, gambar, font — konten tidak berubah selama nama file sama.
@@ -70,7 +67,7 @@ def build_cache(response):
     # ⚠ Hanya berlaku untuk response yang memang tidak boleh di-cache.
     #   Untuk static asset, header ini tidak dikirim.
     if response.mimetype in ("application/json", "text/html"):
-        response.headers["Pragma"]  = "no-cache"
+        response.headers["Pragma"] = "no-cache"
 
         # Expires: 0
         # Tanggal kedaluwarsa untuk HTTP/1.0 client.

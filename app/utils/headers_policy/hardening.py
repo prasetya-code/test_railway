@@ -92,34 +92,28 @@ def build_hardening(response):
     # =========================================================
 
     PERMISSIONS = [
-
         # --- Hardware Sensitif ---
         # Diblokir karena sangat sensitif dan tidak dibutuhkan website pada umumnya.
         # Mobile  : browser sudah minta izin user via popup native jika benar-benar dibutuhkan.
         # Desktop : secara fisik tidak punya sensor ini.
-        "geolocation=()",           # GPS / lokasi pengguna
-        "microphone=()",            # akses mikrofon
-        "camera=()",                # akses kamera
-        "usb=()",                   # akses perangkat USB
-        "bluetooth=()",             # akses Bluetooth
-
+        "geolocation=()",  # GPS / lokasi pengguna
+        "microphone=()",  # akses mikrofon
+        "camera=()",  # akses kamera
+        "usb=()",  # akses perangkat USB
+        "bluetooth=()",  # akses Bluetooth
         # --- Fitur Display ---
-        "fullscreen=()",            # mode layar penuh
-        "picture-in-picture=()",    # mode picture-in-picture
-
+        "fullscreen=()",  # mode layar penuh
+        "picture-in-picture=()",  # mode picture-in-picture
         # --- Payment & Identity ---
-        "payment=()",                       # Payment Request API
-        "publickey-credentials-get=()",     # WebAuthn / passkey
-
+        "payment=()",  # Payment Request API
+        "publickey-credentials-get=()",  # WebAuthn / passkey
         # ✅ TIDAK DIBLOKIR — sensor gerak & cahaya:
         # accelerometer, gyroscope, magnetometer, ambient-light-sensor
         # → Belum jadi standar W3C resmi, menyebabkan warning di console browser.
         # → Mobile  : browser sudah tangani izin via popup native.
         # → Desktop : tidak punya hardware sensor ini.
-
         # ✅ TIDAK DIBLOKIR — fitur network:
         # sync-xhr → deprecated, browser modern sudah tidak mendukung.
-
         # ❌ DIHAPUS — belum standar W3C, menyebabkan warning di console:
         # "attribution-reporting=()"      → Google Privacy Sandbox
         # "private-aggregation=()"        → Google Privacy Sandbox
@@ -134,9 +128,9 @@ def build_hardening(response):
     # =========================================================
 
     response.headers["X-Content-Type-Options"] = CONTENT_TYPE_OPTIONS
-    response.headers["X-Frame-Options"]        = FRAME_OPTIONS
-    response.headers["X-XSS-Protection"]       = XSS_PROTECTION
-    response.headers["Referrer-Policy"]        = REFERRER_POLICY
-    response.headers["Permissions-Policy"]     = ", ".join(PERMISSIONS)
+    response.headers["X-Frame-Options"] = FRAME_OPTIONS
+    response.headers["X-XSS-Protection"] = XSS_PROTECTION
+    response.headers["Referrer-Policy"] = REFERRER_POLICY
+    response.headers["Permissions-Policy"] = ", ".join(PERMISSIONS)
 
     return response

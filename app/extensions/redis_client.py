@@ -45,31 +45,29 @@ redis_health_meta = {
         "last_check": None,
         "fail_count": 0,
         "circuit_open": False,
-    }
+    },
 }
 
 # =========================
 # CIRCUIT BREAKER CONFIG
 # =========================
-FAIL_THRESHOLD = 3   # gagal berapa kali → open circuit
+FAIL_THRESHOLD = 3  # gagal berapa kali → open circuit
 RECOVERY_TIME = 10  # detik sebelum retry lagi
 
 
 # =========================
 # TIMEOUT (dalam detik)
 # =========================
-TIMEOUT = 5  #(recommended: normal range
+TIMEOUT = 5  # (recommended: normal range
 
 
 REDIS_COMMON_CONFIG = {
     "socket_connect_timeout": TIMEOUT,
     "socket_timeout": TIMEOUT,
-
     # =========================
     # CONNECTION POOL
     # =========================
     "max_connections": 20,
-
     # =========================
     # RETRY STRATEGY (versi simpel)
     # =========================
@@ -283,6 +281,7 @@ def check_redis_health(name, client_getter, key):
 # =========================
 HEALTH_CHECK_INTERVAL = 10
 
+
 def _health_loop():
     print("[REDIS HEALTH] Background thread started")
 
@@ -329,7 +328,7 @@ def is_cache_redis_available():
 def is_limit_redis_available():
     try:
         return get_limit_redis() is not None
-    
+
     except Exception as e:
         print(f"[REDIS LIMIT CHECK ERROR] {e}")
         traceback.print_exc()

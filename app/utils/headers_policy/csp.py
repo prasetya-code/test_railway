@@ -50,7 +50,7 @@ def build_csp(response):
     # img-src — sumber gambar (<img>, background-image CSS, favicon)
     IMG_SRC = [
         "'self'",
-        "data:",                       # base64 inline image / placeholder
+        "data:",  # base64 inline image / placeholder
         # "blob:",                     # aktifkan jika ada preview upload
         # "https://cdn.domain.com",    # aktifkan jika gambar dari CDN eksternal
     ]
@@ -70,7 +70,7 @@ def build_csp(response):
 
     # media-src — sumber untuk <audio> dan <video>
     MEDIA_SRC = [
-        "'none'",                      # tidak ada kebutuhan media — blokir semua
+        "'none'",  # tidak ada kebutuhan media — blokir semua
         # "'self'",                    # aktifkan jika ada audio/video dari server sendiri
     ]
 
@@ -83,7 +83,7 @@ def build_csp(response):
     # child-src — sumber untuk <frame>, <iframe>, dan worker
     #             (fallback sebelum worker-src / frame-src didefinisikan)
     CHILD_SRC = [
-        "'none'",                      # blokir semua child context
+        "'none'",  # blokir semua child context
     ]
 
     # manifest-src — sumber untuk file Web App Manifest (manifest.json)
@@ -119,7 +119,7 @@ def build_csp(response):
     # frame-ancestors — siapa yang boleh embed halaman ini via <iframe>, <frame>, <object>
     # ⚠ Directive ini MENGGANTIKAN X-Frame-Options di browser modern.
     FRAME_ANCESTORS = [
-        "'none'",                      # tidak boleh di-embed siapapun
+        "'none'",  # tidak boleh di-embed siapapun
         # "'self'",                    # alternatif: izinkan embed oleh origin sendiri
         # "https://dashboard.domain.com", # alternatif: izinkan domain spesifik
     ]
@@ -145,25 +145,24 @@ def build_csp(response):
     # =========================================================
 
     directives = {
-        "default-src":     DEFAULT_SRC,
-        "script-src":      SCRIPT_SRC,
-        "style-src":       STYLE_SRC,
-        "img-src":         IMG_SRC,
-        "font-src":        FONT_SRC,
-        "connect-src":     CONNECT_SRC,
-        "media-src":       MEDIA_SRC,
-        "worker-src":      WORKER_SRC,
-        "child-src":       CHILD_SRC,
-        "manifest-src":    MANIFEST_SRC,
-        "base-uri":        BASE_URI,
-        "form-action":     FORM_ACTION,
+        "default-src": DEFAULT_SRC,
+        "script-src": SCRIPT_SRC,
+        "style-src": STYLE_SRC,
+        "img-src": IMG_SRC,
+        "font-src": FONT_SRC,
+        "connect-src": CONNECT_SRC,
+        "media-src": MEDIA_SRC,
+        "worker-src": WORKER_SRC,
+        "child-src": CHILD_SRC,
+        "manifest-src": MANIFEST_SRC,
+        "base-uri": BASE_URI,
+        "form-action": FORM_ACTION,
         "frame-ancestors": FRAME_ANCESTORS,
-        "object-src":      OBJECT_SRC,
+        "object-src": OBJECT_SRC,
     }
 
     policy = "; ".join(
-        f"{directive} {' '.join(sources)}"
-        for directive, sources in directives.items()
+        f"{directive} {' '.join(sources)}" for directive, sources in directives.items()
     )
 
     if UPGRADE_INSECURE:

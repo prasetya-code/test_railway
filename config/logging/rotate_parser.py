@@ -19,6 +19,7 @@ os.makedirs(LOG_DIR, exist_ok=True)
 # LOGGER SETUP
 # =========================================================
 
+
 def setup_logger(logger_name, fields, level=logging.INFO):
 
     logger = logging.getLogger(logger_name)
@@ -30,10 +31,9 @@ def setup_logger(logger_name, fields, level=logging.INFO):
     # =====================================================
 
     if not logger.handlers:
-
         current_date = datetime.now().strftime("%Y-%m-%d")
-        log_filename = (f"{logger_name.lower()}_{current_date}.log")
-        
+        log_filename = f"{logger_name.lower()}_{current_date}.log"
+
         log_path = os.path.join(LOG_DIR, log_filename)
 
         # =================================================
@@ -45,7 +45,7 @@ def setup_logger(logger_name, fields, level=logging.INFO):
             when="midnight",
             interval=1,
             backupCount=30,
-            encoding="utf-8"
+            encoding="utf-8",
         )
 
         # =================================================
@@ -54,10 +54,7 @@ def setup_logger(logger_name, fields, level=logging.INFO):
 
         formatter = jsonlogger.JsonFormatter(
             "%(asctime)s %(levelname)s %(name)s %(message)s "
-            + " ".join([
-                f"%({field})s"
-                for field in fields
-            ])
+            + " ".join([f"%({field})s" for field in fields])
         )
 
         handler.setFormatter(formatter)

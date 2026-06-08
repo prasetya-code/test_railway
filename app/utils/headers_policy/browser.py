@@ -1,11 +1,12 @@
-from .hardening  import build_hardening
-from .csp        import build_csp
-from .transport  import build_transport
-from .isolation  import build_isolation
-from .cache      import build_cache
+from .hardening import build_hardening
+from .csp import build_csp
+from .transport import build_transport
+from .isolation import build_isolation
+from .cache import build_cache
 
 
 """ FILE CORS DAN API BELUM DI TERAPKAN KE SINI """
+
 
 def browser_privacy(response):
     """

@@ -1,15 +1,17 @@
 from flask import Flask
 import traceback
 
+
 def create_app():
     # initialize core
     # ===================
-    core = Flask(__name__, static_folder='static', template_folder='templates')
+    core = Flask(__name__, static_folder="static", template_folder="templates")
 
-    try: 
+    try:
         # register app extension
         # ===================
         from app.extensions import register_extension
+
         register_extension(core)
 
         # register config
@@ -19,19 +21,19 @@ def create_app():
         # register app utils
         # ===================
         from app.utils import register_utils
+
         register_utils(core)
 
         # register app routes
         # ===================
         from app.routes import register_routes
-        register_routes(core)
 
+        register_routes(core)
 
     except Exception as e:
         print("\nFAILURE")
         print("ERROR:", e)
 
-        traceback.print_exc() 
-
+        traceback.print_exc()
 
     return core

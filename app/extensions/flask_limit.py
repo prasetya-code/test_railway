@@ -25,7 +25,7 @@ USE_REDIS_LIMITER = os.getenv("USE_REDIS_LIMITER", "true").lower() == "true"
 def default_key_func():
     try:
         return get_remote_address()
-    
+
     except Exception as e:
         print(f"[LIMITER ERROR] Failed to get remote address: {e}")
         traceback.print_exc()

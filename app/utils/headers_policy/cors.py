@@ -119,10 +119,10 @@ def build_cors(response, *, allow_public: bool = False):
     # BUILD & APPLY
     # =========================================================
 
-    response.headers["Access-Control-Allow-Origin"]   = ", ".join(ALLOW_ORIGIN)
-    response.headers["Access-Control-Allow-Methods"]  = ", ".join(ALLOW_METHODS)
-    response.headers["Access-Control-Allow-Headers"]  = ", ".join(ALLOW_HEADERS)
-    response.headers["Access-Control-Max-Age"]        = MAX_AGE
+    response.headers["Access-Control-Allow-Origin"] = ", ".join(ALLOW_ORIGIN)
+    response.headers["Access-Control-Allow-Methods"] = ", ".join(ALLOW_METHODS)
+    response.headers["Access-Control-Allow-Headers"] = ", ".join(ALLOW_HEADERS)
+    response.headers["Access-Control-Max-Age"] = MAX_AGE
     response.headers["Access-Control-Expose-Headers"] = ", ".join(EXPOSE_HEADERS)
 
     if ALLOW_CREDENTIALS:

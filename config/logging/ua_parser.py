@@ -30,7 +30,7 @@ def clean_value(value, default="-"):
         if value is None:
             return default
 
-        value = str(value).replace('"', '').strip()
+        value = str(value).replace('"', "").strip()
 
         if not value:
             return default
@@ -46,18 +46,9 @@ def get_client_hints(headers: dict):
     try:
         return {
             "sec_ch_ua": headers.get("Sec-CH-UA", ""),
-
-            "platform": clean_value(
-                headers.get("Sec-CH-UA-Platform")
-            ),
-
-            "mobile": clean_value(
-                headers.get("Sec-CH-UA-Mobile")
-            ),
-
-            "platform_version": clean_value(
-                headers.get("Sec-CH-UA-Platform-Version")
-            ),
+            "platform": clean_value(headers.get("Sec-CH-UA-Platform")),
+            "mobile": clean_value(headers.get("Sec-CH-UA-Mobile")),
+            "platform_version": clean_value(headers.get("Sec-CH-UA-Platform-Version")),
         }
 
     except Exception:
@@ -78,27 +69,17 @@ def parse_browser(ua: str, sec_ch_ua: str):
 
         # Prioritas Client Hints
         if sec_ch_ua:
-
-            matches = re.findall(
-                r'"([^"]+)";v="(\d+)"',
-                sec_ch_ua
-            )
+            matches = re.findall(r'"([^"]+)";v="(\d+)"', sec_ch_ua)
 
             for name, ver in matches:
-
-                if name not in (
-                    "Chromium",
-                    "Not-A.Brand"
-                ):
+                if name not in ("Chromium", "Not-A.Brand"):
                     browser = name
                     browser_version = ver
                     break
 
         # Fallback User-Agent
         if browser == "Other":
-
             for name, pattern in BROWSER_PATTERNS:
-
                 match = pattern.search(ua)
 
                 if match:
@@ -129,17 +110,13 @@ def parse_os(ua: str, platform: str, platform_version: str):
         # Fallback User-Agent
         else:
             for name, pattern in OS_PATTERNS:
-
                 match = pattern.search(ua)
 
                 if match:
                     os_name = name
 
                     if match.groups():
-                        os_version = (
-                            match.group(1)
-                            .replace("_", ".")
-                        )
+                        os_version = match.group(1).replace("_", ".")
 
                     break
 
@@ -157,17 +134,10 @@ def parse_device(ua: str, mobile: str):
         if mobile == "?1":
             return "Mobile"
 
-        elif (
-            "ipad" in ua_lower
-            or "tablet" in ua_lower
-        ):
+        elif "ipad" in ua_lower or "tablet" in ua_lower:
             return "Tablet"
 
-        elif (
-            "mobile" in ua_lower
-            or "iphone" in ua_lower
-            or "android" in ua_lower
-        ):
+        elif "mobile" in ua_lower or "iphone" in ua_lower or "android" in ua_lower:
             return "Mobile"
 
         return "Desktop"
@@ -180,6 +150,7 @@ def parse_device(ua: str, mobile: str):
 # =========================================================
 # MAIN PARSER
 # =========================================================
+
 
 def parse_user_agent(ua: str, headers: dict = None):
     try:
@@ -198,29 +169,19 @@ def parse_user_agent(ua: str, headers: dict = None):
         # BROWSER
         # =====================================================
 
-        browser, browser_version = parse_browser(
-            ua,
-            hints["sec_ch_ua"]
-        )
+        browser, browser_version = parse_browser(ua, hints["sec_ch_ua"])
 
         # =====================================================
         # OS
         # =====================================================
 
-        os_name, os_version = parse_os(
-            ua,
-            hints["platform"],
-            hints["platform_version"]
-        )
+        os_name, os_version = parse_os(ua, hints["platform"], hints["platform_version"])
 
         # =====================================================
         # DEVICE
         # =====================================================
 
-        device = parse_device(
-            ua,
-            hints["mobile"]
-        )
+        device = parse_device(ua, hints["mobile"])
 
         # =====================================================
         # RESULT
@@ -229,10 +190,8 @@ def parse_user_agent(ua: str, headers: dict = None):
         return {
             "browser": browser,
             "browser_version": browser_version,
-
             "os": os_name,
             "os_version": os_version,
-
             "device": device,
         }
 
@@ -242,9 +201,7 @@ def parse_user_agent(ua: str, headers: dict = None):
         return {
             "browser": "Error",
             "browser_version": "-",
-
             "os": "Error",
             "os_version": "-",
-
             "device": "Unknown",
         }
