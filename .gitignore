@@ -1,9 +1,20 @@
-# env
+# Env
 win_env
 
 # Python Cache
 **__pycache__
 *.pyc
+
+# NPM
+**node_modules
+
+# Linting
+.ruff_cache
+
+# Testing
+.pytest_cache
+.coverage
+coverage.xml
 
 # VSCode
 .vscode/

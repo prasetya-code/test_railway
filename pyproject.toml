@@ -1,0 +1,17 @@
+# Konfigurasi untuk DjLint
+[tool.djlint]
+
+# Flask menggunakan Jinja2
+profile = "jinja"
+
+# Indentasi 4 spasi
+indent = 4
+
+# Panjang maksimal satu baris
+max_line_length = 120
+
+# Format CSS inline
+format_css = true
+
+# Format JavaScript inline
+format_js = true

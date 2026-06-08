@@ -1,3 +1,10 @@
+# NOTE LINTING & TESTING
+
+- linting with ruff -> `ruff check . --fix && ruff format . && ruff check .`
+- testing with pytest -> 
+   - buat file pytest.ini
+   - `pytest tests/ -v --cov=src --cov-report=term-missing --cov-report=xml`
+
 # Env in railways
 
 | Kebutuhan                                | Gunakan           |
