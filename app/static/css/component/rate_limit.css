@@ -1,0 +1,121 @@
+@keyframes e429-blob {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+}
+
+@keyframes e429-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes e429-flicker {
+  0%,
+  100% {
+    border-color: rgb(245 158 11 / 25%);
+  }
+
+  50% {
+    border-color: rgb(249 115 22 / 35%);
+  }
+}
+
+@keyframes e429-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.65;
+  }
+}
+
+.e429-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(80px);
+  opacity: 0.2;
+  animation: e429-blob 8s infinite;
+}
+
+.e429-b1 {
+  top: -120px;
+  right: -80px;
+  width: 340px;
+  height: 340px;
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+}
+
+.e429-b2 {
+  bottom: -40px;
+  left: 60px;
+  width: 300px;
+  height: 300px;
+  background: linear-gradient(135deg, #eab308, #f59e0b);
+  animation-delay: 2.5s;
+}
+
+.e429-b3 {
+  bottom: 20px;
+  right: 22%;
+  width: 280px;
+  height: 280px;
+  background: linear-gradient(135deg, #f97316, #eab308);
+  animation-delay: 5s;
+}
+
+.e429-grid {
+  background-image:
+    linear-gradient(
+      0deg,
+      transparent 24%,
+      rgb(180 83 9 / 4%) 25%,
+      rgb(180 83 9 / 4%) 26%,
+      transparent 27%,
+      transparent 74%,
+      rgb(180 83 9 / 4%) 75%,
+      rgb(180 83 9 / 4%) 76%,
+      transparent 77%
+    ),
+    linear-gradient(
+      90deg,
+      transparent 24%,
+      rgb(180 83 9 / 4%) 25%,
+      rgb(180 83 9 / 4%) 26%,
+      transparent 27%,
+      transparent 74%,
+      rgb(180 83 9 / 4%) 75%,
+      rgb(180 83 9 / 4%) 76%,
+      transparent 77%
+    );
+  background-size: 50px 50px;
+}
+
+.e429-fade-up {
+  animation: e429-fade-up 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.e429-pulse-border {
+  animation: e429-flicker 3s ease-in-out infinite;
+}
+
+.e429-pulse {
+  animation: e429-pulse 2s ease-in-out infinite;
+}

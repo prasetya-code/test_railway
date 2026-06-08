@@ -1,0 +1,8 @@
+<!-- 1. Polyfill dulu untuk browser lama -->
+<script nomodule
+        src="{{ url_for('static', filename='dist/polyfills-legacy.js') }}"></script>
+<!-- 2. Kode transpile untuk browser lama -->
+<script nomodule
+        src="{{ url_for('static', filename='dist/main-legacy.js') }}"></script>
+<!-- 3. Kode modern untuk browser baru -->
+<script type="module" src="{{ url_for('static', filename='dist/main.js') }}"></script>

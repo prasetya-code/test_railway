@@ -5,6 +5,9 @@ win_env
 **__pycache__
 *.pyc
 
+# NPM
+**node_modules
+
 # Linting
 .ruff_cache
 

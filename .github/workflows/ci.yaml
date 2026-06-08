@@ -46,6 +46,24 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      # Menjalankan Lint Djlint
+      - name: Run Djlint Auto Lint
+      - run: |
+          djlint app --lint
+
+      # Menjalankan Check Djlint
+      - name: Run Djlint Auto Lint
+      - run: |
+          djlint app --check
+
+      # Menjalankan Reformat Djlint
+      - name: Run Djlint Auto Lint
+      - run: |
+          djlint app --reformat`
+
+      # Menjalankan x Stylint
+      
+
       # Menjalankan auto fix Ruff
       - name: Run Ruff Auto Fix
         run: |
