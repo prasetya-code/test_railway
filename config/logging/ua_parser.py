@@ -1,4 +1,5 @@
-import re, traceback
+import re
+import traceback
 
 # =========================================================
 # PATTERNS

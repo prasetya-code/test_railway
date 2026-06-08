@@ -1,3 +1,10 @@
+# NOTE LINTING & TESTING
+
+- linting with ruff -> `ruff check . --fix`
+- testing with pytest -> 
+   - buat file pytest.ini
+   - pytest
+
 # Env in railways
 
 | Kebutuhan                                | Gunakan           |

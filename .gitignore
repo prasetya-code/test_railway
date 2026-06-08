@@ -1,9 +1,14 @@
-# env
+# Env
 win_env
 
 # Python Cache
 **__pycache__
 *.pyc
+
+# Linting
+.ruff_cache
+
+# Testing
 .pytest_cache
 
 # VSCode

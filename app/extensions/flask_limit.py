@@ -2,7 +2,8 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from .redis_client import is_limit_redis_available, REDIS_LIMIT_URL
 
-import os, traceback
+import os
+import traceback
 
 # =========================
 # CONFIG

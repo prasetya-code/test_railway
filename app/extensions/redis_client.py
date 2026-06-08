@@ -2,7 +2,11 @@ import redis
 from redis.retry import Retry
 from redis.backoff import ExponentialBackoff
 
-import os, traceback, socket, threading, time
+import os
+import traceback
+import socket
+import threading
+import time
 from urllib.parse import urlparse
 
 

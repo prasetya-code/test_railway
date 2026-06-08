@@ -1,6 +1,7 @@
 from flask import g, request
 
-import secrets, re
+import secrets
+import re
 
 # 32 bytes = 256-bit entropy (rekomendasi W3C CSP Level 3)
 NONCE_BYTES = 32

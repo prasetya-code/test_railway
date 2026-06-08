@@ -1,7 +1,8 @@
 from flask_caching import Cache
 from .redis_client import is_cache_redis_available, REDIS_CACHE_URL
 
-import os, traceback
+import os
+import traceback
 
 fl_cache = Cache()
 
