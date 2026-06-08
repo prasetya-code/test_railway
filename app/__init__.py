@@ -1,11 +1,37 @@
 from flask import Flask
-
+import traceback
 
 def create_app():
-    app = Flask(__name__)
+    # initialize core
+    # ===================
+    core = Flask(__name__, static_folder='static', template_folder='templates')
 
-    @app.route("/")
-    def home():
-        return "hello"
+    try: 
+        # register app extension
+        # ===================
+        from app.extensions import register_extension
+        register_extension(core)
 
-    return app
+        # register config
+        # ===================
+        # sample
+
+        # register app utils
+        # ===================
+        from app.utils import register_utils
+        register_utils(core)
+
+        # register app routes
+        # ===================
+        from app.routes import register_routes
+        register_routes(core)
+
+
+    except Exception as e:
+        print("\nFAILURE")
+        print("ERROR:", e)
+
+        traceback.print_exc() 
+
+
+    return core
