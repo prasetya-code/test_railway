@@ -21,51 +21,57 @@ jobs:
           - "3.11"
 
     steps:
-      # Mengambil source code repository
+      # Checkout repository
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Setup Python environment
+      # Setup Python
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
 
-      # Install dependency project
-      - name: Install Dependencies
+      # Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: node/package-lock.json
+
+      # Install Python dependencies
+      - name: Install Python Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # Menjalankan reformat Djlint
+      # Install Node dependencies
+      - name: Install Node Dependencies
+        working-directory: node
+        run: npm ci
+
+      # Reformat HTML templates
       - name: Run Djlint Auto Lint
-        run: |
-          djlint app --reformat
+        run: djlint app --reformat
 
-      # Menjalankan Stylint
-      - name: Run Stylint Fix Style
-        run: |
-          cd node
-          npm run fix_css
-          cd ..
+      # Fix CSS formatting and lint
+      - name: Run Stylelint Fix Style
+        working-directory: node
+        run: npm run fix_css
 
-      # Menjalankan auto fix Ruff
+      # Auto-fix Ruff issues
       - name: Run Ruff Auto Fix
-        run: |
-          ruff check . --fix
+        run: ruff check . --fix
 
-      # Menjalankan formatter Ruff
+      # Format Python code
       - name: Run Ruff Format
-        run: |
-          ruff format .
+        run: ruff format .
 
-      # Verifikasi tidak ada lint error tersisa
+      # Verify no lint issues remain
       - name: Run Ruff Check
-        run: |
-          ruff check .
+        run: ruff check .
 
-      # Menjalankan unit test
+      # Run tests
       - name: Run Tests
-        run: |
-          python -m pytest
+        run: python -m pytest
