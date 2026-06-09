@@ -16,7 +16,9 @@ def create_app():
 
         # register config
         # ===================
-        # sample
+        from config import register_config
+
+        register_config(core)
 
         # register app utils
         # ===================

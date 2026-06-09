@@ -22,8 +22,14 @@ os.makedirs(LOG_DIR, exist_ok=True)
 
 def setup_logger(logger_name, fields, level=logging.INFO):
 
+    # =====================================================
+    # LOGGER
+    # =====================================================
+
     logger = logging.getLogger(logger_name)
+
     logger.setLevel(level)
+
     logger.propagate = False
 
     # =====================================================
@@ -31,8 +37,21 @@ def setup_logger(logger_name, fields, level=logging.INFO):
     # =====================================================
 
     if not logger.handlers:
+        # =================================================
+        # DATE FORMAT
+        # =================================================
+
         current_date = datetime.now().strftime("%Y-%m-%d")
+
+        # =================================================
+        # FILE FORMAT
+        # =================================================
+
         log_filename = f"{logger_name.lower()}_{current_date}.log"
+
+        # =================================================
+        # FULL LOG PATH
+        # =================================================
 
         log_path = os.path.join(LOG_DIR, log_filename)
 
