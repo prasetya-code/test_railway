@@ -1,0 +1,234 @@
+{% set navbar_items = [
+  {
+    "name": "About Me",
+    "href": "#",
+    "icon": "mdi:account-outline"
+  },
+  {
+    "name": "Portfolio",
+    "icon": "mdi:briefcase-outline",
+    "children": [
+      {
+        "name": "Industry Experience",
+        "href": "#",
+        "icon": "mdi:office-building-outline"
+      },
+      {
+        "name": "Selected Projects",
+        "href": "#",
+        "icon": "mdi:code-tags"
+      }
+    ]
+  }
+] %}
+
+{% set nav_item_class = "
+  px-3 lg:px-4
+  py-2
+  rounded-md
+  text-sm md:text-base
+  font-medium
+  hover:bg-base-200
+  transition-colors duration-150
+  inline-flex items-center gap-2
+" %}
+
+{% set dropdown_item_class = "
+  block px-4 py-2
+  text-sm
+  hover:bg-base-200
+  rounded-md
+  transition-colors duration-150
+  flex items-center gap-2
+" %}
+
+<nav x-data="{ mobileOpen: false, tabletOpen: false }"
+     class="w-full sticky top-0 z-50 bg-base-100 shadow-sm">
+
+  <div class="w-full px-4 md:px-8 lg:px-16">
+    <div class="flex items-center justify-between h-16">
+
+      <!-- LOGO -->
+      <a href="/" class="flex items-center gap-2 text-lg md:text-xl lg:text-2xl font-bold">
+        <img
+          src="{{ url_for('file.protected_image', filename='logo.png') }}"
+          alt="Siklus Data"
+          class="h-7 md:h-8 lg:h-10 w-auto"
+        />
+        <span class="text-primary">Siklus</span> Data
+      </a>
+
+      <!-- RIGHT SIDE -->
+      <div class="flex items-center gap-4 relative">
+
+        <!-- DESKTOP & TABLET MENU -->
+        <ul class="hidden md:flex items-center gap-2">
+
+          {% for item in navbar_items %}
+
+            {% if not item.children %}
+              <li>
+                <a href="{{ item.href }}" class="{{ nav_item_class }}">
+                  <span class="iconify text-lg opacity-70"
+                        data-icon="{{ item.icon }}"></span>
+                  {{ item.name }}
+                </a>
+              </li>
+
+            {% else %}
+              <!-- DESKTOP (hover) -->
+              <li class="relative group hidden lg:block">
+                <span class="{{ nav_item_class }} cursor-pointer">
+                  <span class="iconify text-lg opacity-70"
+                        data-icon="{{ item.icon }}"></span>
+                  {{ item.name }}
+                  <span class="text-xs opacity-60">▾</span>
+                </span>
+
+                <ul class="absolute right-0 top-full pt-3 w-56 z-50
+                           opacity-0 invisible
+                           bg-base-100 rounded-xl shadow-lg border
+                           group-hover:opacity-100 group-hover:visible
+                           transition-all duration-150">
+                  {% for child in item.children %}
+                    <li>
+                      <a href="{{ child.href }}" class="{{ dropdown_item_class }}">
+                        <span class="iconify text-base opacity-70"
+                              data-icon="{{ child.icon }}"></span>
+                        {{ child.name }}
+                      </a>
+                    </li>
+                  {% endfor %}
+                </ul>
+              </li>
+
+              <!-- TABLET (click dropdown) -->
+              <li class="relative hidden md:block lg:hidden">
+                <button
+                  @click="tabletOpen = !tabletOpen"
+                  class="{{ nav_item_class }}">
+                  <span class="iconify text-lg opacity-70"
+                        data-icon="{{ item.icon }}"></span>
+                  {{ item.name }}
+                  <span class="text-xs opacity-60"
+                        :class="{ 'rotate-180': tabletOpen }">
+                    ▾
+                  </span>
+                </button>
+
+                <!-- Overlay -->
+                <div
+                  x-show="tabletOpen"
+                  x-transition.opacity
+                  @click="tabletOpen = false"
+                  @keydown.escape.window="tabletOpen = false"
+                  class="fixed top-[4rem] inset-x-0 bottom-0 bg-black/40 z-40">
+                </div>
+
+                <ul
+                  x-show="tabletOpen"
+                  x-transition
+                  @click.outside="tabletOpen = false"
+                  class="absolute right-0 mt-2 w-56 p-2
+                         bg-base-100 rounded-xl shadow-lg border z-50">
+                  {% for child in item.children %}
+                    <li>
+                      <a href="{{ child.href }}" class="{{ dropdown_item_class }}">
+                        <span class="iconify text-base opacity-70"
+                              data-icon="{{ child.icon }}"></span>
+                        {{ child.name }}
+                      </a>
+                    </li>
+                  {% endfor %}
+                </ul>
+              </li>
+
+            {% endif %}
+          {% endfor %}
+        </ul>
+
+        <!-- HAMBURGER (Mobile Only) -->
+        <button @click="mobileOpen = !mobileOpen"
+                class="md:hidden p-2 rounded-md hover:bg-base-200 transition">
+          <span class="iconify text-2xl"
+                data-icon="mdi:menu"></span>
+        </button>
+
+        <!-- THEME TOGGLE -->
+        <div @click.stop>
+          {% include 'material/toggle_theme.html' %}
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- MOBILE OVERLAY -->
+  <div
+      x-show="mobileOpen"
+      x-transition.opacity
+      @click="mobileOpen = false"
+      @keydown.escape.window="mobileOpen = false"
+      class="fixed top-[4rem] inset-x-0 bottom-0 bg-black/40 z-40 md:hidden">
+  </div>
+
+  <!-- MOBILE MENU -->
+  <div x-show="mobileOpen"
+       x-transition
+       class="fixed top-[4rem] left-0 right-0 z-50 md:hidden
+              bg-base-100 border-t shadow-lg
+              overflow-auto max-h-[calc(100vh-4rem)]">
+
+    <ul class="flex flex-col gap-3 p-2 text-base">
+      {% for item in navbar_items %}
+        {% if not item.children %}
+          <li>
+            <a href="{{ item.href }}"
+              class="{{ nav_item_class }}
+                      relative
+                      after:absolute after:left-0 after:-bottom-1
+                      after:h-[2px] after:w-full
+                      after:bg-primary
+                      after:origin-left after:scale-x-0
+                      after:transition-transform after:duration-300
+                      hover:after:scale-x-100">
+              <span class="iconify text-lg opacity-70"
+                    data-icon="{{ item.icon }}"></span>
+              {{ item.name }}
+            </a>
+          </li>
+        {% else %}
+          <li>
+            <div class="font-semibold px-3 py-2 flex items-center gap-2">
+              <span class="iconify text-lg opacity-70"
+                    data-icon="{{ item.icon }}"></span>
+              {{ item.name }}
+            </div>
+
+            <ul class="ml-4 flex flex-col gap-2">
+              {% for child in item.children %}
+                <li>
+                  <a href="{{ child.href }}"
+                    class="{{ dropdown_item_class }}
+                            relative
+                            after:absolute after:left-0 after:-bottom-1
+                            after:h-[2px] after:w-full
+                            after:bg-primary
+                            after:origin-left after:scale-x-0
+                            after:transition-transform after:duration-300
+                            hover:after:scale-x-100">
+                    <span class="iconify text-base opacity-70"
+                          data-icon="{{ child.icon }}"></span>
+                    {{ child.name }}
+                  </a>
+                </li>
+              {% endfor %}
+            </ul>
+          </li>
+        {% endif %}
+      {% endfor %}
+    </ul>
+
+  </div>
+
+</nav>
