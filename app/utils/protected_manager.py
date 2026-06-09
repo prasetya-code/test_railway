@@ -8,7 +8,6 @@ from config.logging.log_parser import app_logger
 # 🔧 FILE HANDLER CONFIG & UTILS (Pathlib + Scalable + Logging)
 # ============================================================
 
-logger = app_logger()
 
 # -----------------------------
 # Allowed extensions per type
@@ -46,11 +45,11 @@ def is_trusted_referer(file_type: str) -> bool:
         if file_type == "images" and accept.startswith("image/"):
             return True
 
-        logger.warning(f"Referer kosong untuk file_type={file_type}, ditolak")
+        app_logger.warning(f"Referer kosong untuk file_type={file_type}, ditolak")
         return False
 
     hostname = urlparse(referer).hostname
-    logger.debug(f"[Referer Check] File type={file_type}, Host={hostname}")
+    app_logger.debug(f"[Referer Check] File type={file_type}, Host={hostname}")
 
     trusted = any(
         hostname == trusted_host or (hostname and hostname.endswith("." + trusted_host))
@@ -58,7 +57,9 @@ def is_trusted_referer(file_type: str) -> bool:
     )
 
     if not trusted:
-        logger.warning(f"Referer tidak trusted: {hostname} untuk file_type={file_type}")
+        app_logger.warning(
+            f"Referer tidak trusted: {hostname} untuk file_type={file_type}"
+        )
     return trusted
 
 
@@ -73,7 +74,7 @@ def is_allowed_file(filename: str, file_type: str) -> bool:
     ext = Path(filename).suffix.lower()
 
     if ext not in allowed:
-        logger.warning(
+        app_logger.warning(
             f"File extension tidak diperbolehkan: {filename} untuk tipe {file_type}"
         )
 
@@ -94,6 +95,6 @@ def is_safe_path(filename: str, base_dir: str = ".") -> bool:
 
     safe = base_path in file_path.parents or file_path == base_path
     if not safe:
-        logger.warning(f"Path tidak aman: {file_path} (base: {base_path})")
+        app_logger.warning(f"Path tidak aman: {file_path} (base: {base_path})")
 
     return safe

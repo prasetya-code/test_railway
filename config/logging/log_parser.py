@@ -1,5 +1,6 @@
 from .rotate_parser import setup_logger
 
+
 # =========================================================
 # FIELD REGISTRY
 # =========================================================
@@ -95,15 +96,11 @@ LOGGER_SCHEMAS = {
 
 
 # =========================================================
-# FIELD COMPOSER
+# COMPOSER
 # =========================================================
 
 
 def compose_fields(*groups):
-    """
-    Merge field groups while preserving order
-    and removing duplicates.
-    """
 
     fields = []
 
@@ -114,7 +111,7 @@ def compose_fields(*groups):
 
 
 # =========================================================
-# LOGGER FIELDS
+# FIELDS
 # =========================================================
 
 APP_FIELDS = compose_fields(*LOGGER_SCHEMAS["APP"])
@@ -125,7 +122,74 @@ SECURITY_FIELDS = compose_fields(*LOGGER_SCHEMAS["SECURITY"])
 
 
 # =========================================================
-# CENTRALIZED LOGGERS
+# SECURITY EVENT REGISTRY (CONSISTENT SCHEMA)
+# =========================================================
+
+SECURITY_EVENTS = {
+    "RATE_LIMIT_EXCEEDED": {
+        "event_type": "RATE_LIMIT",
+        "threat_type": None,
+        "severity": "MEDIUM",
+        "auth_user": None,
+        "auth_method": None,
+        "login_result": None,
+        "blocked": True,
+        "log_hash": None,
+    },
+    "INVALID_TOKEN": {
+        "event_type": "AUTH",
+        "threat_type": "INVALID_TOKEN",
+        "severity": "HIGH",
+        "auth_user": None,
+        "auth_method": "JWT",
+        "login_result": "FAILED",
+        "blocked": True,
+        "log_hash": None,
+    },
+    "LOGIN_FAILED": {
+        "event_type": "LOGIN",
+        "threat_type": None,
+        "severity": "MEDIUM",
+        "auth_user": None,
+        "auth_method": "PASSWORD",
+        "login_result": "FAILED",
+        "blocked": False,
+        "log_hash": None,
+    },
+    "FORBIDDEN_ACCESS": {
+        "event_type": "AUTH",
+        "threat_type": "FORBIDDEN",
+        "severity": "HIGH",
+        "auth_user": None,
+        "auth_method": None,
+        "login_result": None,
+        "blocked": True,
+        "log_hash": None,
+    },
+}
+
+
+# =========================================================
+# SECURITY LOGGER HELPER
+# =========================================================
+
+
+def security_event(event_name, message=None):
+
+    event = SECURITY_EVENTS.get(event_name)
+
+    if not event:
+        security_logger.warning(f"UNKNOWN_SECURITY_EVENT: {event_name}")
+        return
+
+    security_logger.warning(
+        message or event_name,
+        extra=event,
+    )
+
+
+# =========================================================
+# LOGGERS
 # =========================================================
 
 app_logger = setup_logger(

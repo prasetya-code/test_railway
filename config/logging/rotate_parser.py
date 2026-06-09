@@ -4,15 +4,106 @@ import logging
 from datetime import datetime
 from logging.handlers import TimedRotatingFileHandler
 
-from pythonjsonlogger import jsonlogger
+from flask import (
+    has_request_context,
+    request,
+)
+
+from pythonjsonlogger.json import JsonFormatter
+
 
 # =========================================================
 # LOG DIRECTORY
 # =========================================================
 
-LOG_DIR = "logs"
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-os.makedirs(LOG_DIR, exist_ok=True)
+ROOT_DIR = os.path.dirname(os.path.dirname(CURRENT_DIR))
+
+LOG_DIR = os.path.join(
+    ROOT_DIR,
+    "logs",
+)
+
+os.makedirs(
+    LOG_DIR,
+    exist_ok=True,
+)
+
+
+# =========================================================
+# ACCESS FILTER
+# =========================================================
+
+
+class AccessContextFilter(logging.Filter):
+    def filter(self, record):
+
+        if has_request_context():
+            # -------------------------------------
+            # COMMON
+            # -------------------------------------
+
+            record.request_id = getattr(
+                record,
+                "request_id",
+                None,
+            )
+
+            record.client_ip = request.headers.get(
+                "X-Forwarded-For",
+                request.remote_addr,
+            )
+
+            # -------------------------------------
+            # HTTP
+            # -------------------------------------
+
+            record.method = request.method
+
+            record.path = request.path
+
+            record.query_string = request.query_string.decode(
+                "utf-8",
+                errors="ignore",
+            )
+
+            record.http_version = request.environ.get("SERVER_PROTOCOL")
+
+            record.referer = request.referrer
+
+            record.host = request.host
+
+            # -------------------------------------
+            # UA
+            # -------------------------------------
+
+            record.user_agent = request.headers.get("User-Agent")
+
+        return True
+
+
+# =========================================================
+# DEFAULT FIELD VALUE FILTER
+# =========================================================
+
+
+class DefaultFieldFilter(logging.Filter):
+    def __init__(self, fields):
+        super().__init__()
+        self.fields = fields
+
+    def filter(self, record):
+
+        for field in self.fields:
+            if not hasattr(record, field):
+                setattr(
+                    record,
+                    field,
+                    None,
+                )
+
+        return True
 
 
 # =========================================================
@@ -20,11 +111,11 @@ os.makedirs(LOG_DIR, exist_ok=True)
 # =========================================================
 
 
-def setup_logger(logger_name, fields, level=logging.INFO):
-
-    # =====================================================
-    # LOGGER
-    # =====================================================
+def setup_logger(
+    logger_name,
+    fields,
+    level=logging.INFO,
+):
 
     logger = logging.getLogger(logger_name)
 
@@ -32,62 +123,40 @@ def setup_logger(logger_name, fields, level=logging.INFO):
 
     logger.propagate = False
 
-    # =====================================================
-    # AVOID DUPLICATE HANDLER
-    # =====================================================
+    if logger.handlers:
+        return logger
 
-    if not logger.handlers:
-        # =================================================
-        # DATE FORMAT
-        # =================================================
+    current_date = datetime.now().strftime("%Y-%m-%d")
 
-        current_date = datetime.now().strftime("%Y-%m-%d")
+    log_filename = f"{logger_name.lower()}_{current_date}.log"
 
-        # =================================================
-        # FILE FORMAT
-        # =================================================
+    log_path = os.path.join(
+        LOG_DIR,
+        log_filename,
+    )
 
-        log_filename = f"{logger_name.lower()}_{current_date}.log"
+    handler = TimedRotatingFileHandler(
+        filename=log_path,
+        when="midnight",
+        interval=1,
+        backupCount=30,
+        encoding="utf-8",
+    )
 
-        # =================================================
-        # FULL LOG PATH
-        # =================================================
+    formatter = JsonFormatter(
+        "%(asctime)s "
+        "%(levelname)s "
+        "%(name)s "
+        "%(message)s " + " ".join(f"%({field})s" for field in fields)
+    )
 
-        log_path = os.path.join(LOG_DIR, log_filename)
+    handler.setFormatter(formatter)
 
-        # =================================================
-        # ROTATING HANDLER
-        # =================================================
+    logger.addFilter(DefaultFieldFilter(fields))
 
-        handler = TimedRotatingFileHandler(
-            filename=log_path,
-            when="midnight",
-            interval=1,
-            backupCount=30,
-            encoding="utf-8",
-        )
+    if logger_name == "ACCESS":
+        logger.addFilter(AccessContextFilter())
 
-        # =================================================
-        # JSON FORMATTER
-        # =================================================
-
-        formatter = jsonlogger.JsonFormatter(
-            "%(asctime)s %(levelname)s %(name)s %(message)s "
-            + " ".join([f"%({field})s" for field in fields])
-        )
-
-        handler.setFormatter(formatter)
-
-        # =================================================
-        # AUTO FLUSH
-        # =================================================
-
-        handler.flush = handler.stream.flush
-
-        # =================================================
-        # ADD HANDLER
-        # =================================================
-
-        logger.addHandler(handler)
+    logger.addHandler(handler)
 
     return logger

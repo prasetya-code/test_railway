@@ -3,8 +3,6 @@ from pathlib import Path
 
 import json
 
-logger = app_logger()
-
 
 # ============================================================
 # 🔧 DEFAULT_FILES (Sample Editable dengan variabel version global)
@@ -128,7 +126,7 @@ def ensure_well_known(base_dir: Path = None):
     well_known_dir = base_dir / "app" / "static" / ".well-known"
     well_known_dir.mkdir(parents=True, exist_ok=True)
 
-    logger.debug(f".well-known directory ensured at {well_known_dir}")
+    app_logger.debug(f".well-known directory ensured at {well_known_dir}")
 
     for filename, meta in DEFAULT_FILES.items():
         file_path = well_known_dir / filename
@@ -138,7 +136,7 @@ def ensure_well_known(base_dir: Path = None):
             # Jika file belum ada → buat baru
             if not file_path.exists():
                 file_path.write_text(meta["content"], encoding="utf-8")
-                logger.info(f"Created .well-known/{filename} (v{new_version})")
+                app_logger.info(f"Created .well-known/{filename} (v{new_version})")
 
                 continue
 
@@ -152,12 +150,12 @@ def ensure_well_known(base_dir: Path = None):
                 backup_path.write_text(existing_content, encoding="utf-8")
 
                 file_path.write_text(meta["content"], encoding="utf-8")
-                logger.warning(
+                app_logger.warning(
                     f"Updated {filename} → v{new_version} (backup: {backup_path})"
                 )
 
             else:
-                logger.debug(f"{filename} already up to date (v{new_version})")
+                app_logger.debug(f"{filename} already up to date (v{new_version})")
 
         except Exception as e:
-            logger.exception(f"Failed to process {filename}: {e}")
+            app_logger.exception(f"Failed to process {filename}: {e}")
