@@ -15,13 +15,10 @@ def browser_privacy(response):
     Setiap file menangani satu kelompok header — tidak ada overlap.
 
     Urutan eksekusi:
-      1. hardening.py  → X-Content-Type-Options, X-Frame-Options,
-                         X-XSS-Protection, Referrer-Policy, Permissions-Policy
+      1. hardening.py  → X-Content-Type-Options, X-Frame-Options, X-XSS-Protection, Referrer-Policy, Permissions-Policy
       2. csp.py        → Content-Security-Policy
       3. transport.py  → Strict-Transport-Security
-      4. isolation.py  → Cross-Origin-Opener-Policy,
-                         Cross-Origin-Embedder-Policy,
-                         Cross-Origin-Resource-Policy
+      4. isolation.py  → Cross-Origin-Opener-Policy, Cross-Origin-Embedder-Policy, Cross-Origin-Resource-Policy
       5. cache.py      → Cache-Control
 
     Untuk API endpoint, gunakan build_api() dari api.py — bukan fungsi ini.

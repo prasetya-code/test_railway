@@ -2,7 +2,7 @@ from flask import request
 from urllib.parse import urlparse
 from pathlib import Path
 
-from config.logging.log_parser import app_logger
+from config.log_system import app_logger
 
 # ============================================================
 # 🔧 FILE HANDLER CONFIG & UTILS (Pathlib + Scalable + Logging)

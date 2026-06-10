@@ -7,7 +7,7 @@ from flask import g
 def register_config(app):
 
     try:
-        from .logging.log_parser import (
+        from .log_system import (
             app_logger,
             access_logger,
             security_event,
@@ -52,11 +52,25 @@ def register_config(app):
 
             return response
 
-        # =========================================
-        # APP STARTUP LOG
-        # =========================================
+        # =========================
+        # LOG START
+        # =========================
 
-        app_logger.info("APPLICATION_INITIALIZED")
+        import os
+
+        if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
+            boundary = "=" * 10
+
+            app_logger.info(f"{boundary} LOGGER STARTING POINT {boundary}")
+            app_logger.info("Flask is restarting...")
+            app_logger.info("Log Start ...")
+
+        # =========================
+        # STATIC VERSION
+        # =========================
+        from config.static_ver import apply_static_versioning
+
+        apply_static_versioning(app)
 
     except Exception as e:
         print("\nLOGGER gagal diinisialisasi di create_app()")

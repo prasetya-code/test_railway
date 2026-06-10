@@ -1,10 +1,11 @@
-from .rotate_parser import setup_logger
-from .log_param import FIELD_GROUPS, LOGGER_SCHEMAS, SECURITY_EVENTS
+from .logging.rotate_parser import setup_logger
+from .logging.log_param import FIELD_GROUPS, LOGGER_SCHEMAS, SECURITY_EVENTS
 
 
 # =========================================================
 # COMPOSER
 # =========================================================
+
 
 def compose_fields(*groups):
 
@@ -30,6 +31,7 @@ SECURITY_FIELDS = compose_fields(*LOGGER_SCHEMAS["SECURITY"])
 # =========================================================
 # SECURITY LOGGER HELPER
 # =========================================================
+
 
 def security_event(event_name, message=None):
 
