@@ -1,0 +1,16 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "My AI Plugin",
+  "name_for_model": "my_ai_plugin",
+  "description_for_human": "Deskripsi untuk manusia",
+  "description_for_model": "Deskripsi untuk sistem",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "url": "https://yourdomain.com/api"
+  },
+  "logo_url": "https://yourdomain.com/logo.png",
+  "contact_email": "support@yourdomain.com",
+  "meta_version": "1.0.0"
+}

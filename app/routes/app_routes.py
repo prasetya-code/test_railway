@@ -15,7 +15,6 @@ main_bp = Blueprint("main", __name__)
 # APP ROUTES
 # =========================
 
-
 @main_bp.route("/", methods=["GET"])
 @fl_limiter.limit("5 per minute")
 @fl_cache.cached(
@@ -32,7 +31,6 @@ def index():
 # =========================
 # ERROR HANDLER
 # =========================
-
 
 @main_bp.app_errorhandler(429)
 def ratelimit_handler(e):
