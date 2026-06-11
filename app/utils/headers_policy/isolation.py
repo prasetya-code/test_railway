@@ -1,83 +1,174 @@
-def build_isolation(response):
-    """
-    Menerapkan header isolasi cross-origin (COOP, COEP, CORP).
-    Melindungi halaman dari serangan Spectre, XS-Leaks, dan cross-origin
-    data leakage dengan mengisolasi browsing context secara ketat.
+"""
+Cross-Origin Isolation Headers Policy
 
-    Ketiga header ini bekerja sebagai satu kesatuan:
-    COOP + COEP → mengaktifkan Cross-Origin Isolation (crossOriginIsolated = true)
-                  yang diperlukan untuk SharedArrayBuffer & high-resolution timer.
-    CORP        → melindungi resource server ini dari dimuat situs lain.
-    """
+Handles:
+- Cross-Origin-Opener-Policy (COOP)
+- Cross-Origin-Embedder-Policy (COEP)
+- Cross-Origin-Resource-Policy (CORP)
+- Origin-Agent-Cluster
 
-    # =========================================================
-    # CROSS-ORIGIN OPENER POLICY (COOP)
-    # Mengisolasi tab/window dari halaman cross-origin lain.
-    # Mencegah halaman lain mengakses window object kita via
-    # window.open() atau link target="_blank".
-    #
-    # Cara kerja:
-    #   Tanpa COOP → halaman yang membuka kita via window.open()
-    #                masih bisa akses window.opener kita
-    #   Dengan COOP → window.opener di-null-kan, tidak ada akses
-    # =========================================================
+Purpose:
+- Enable cross-origin isolation for SharedArrayBuffer
+- Improve process isolation and memory safety
+"""
 
-    # → "unsafe-none"            : tidak ada isolasi (default browser)
-    # → "same-origin-allow-popups" : izinkan popup ke cross-origin,
-    #                                blokir akses window dari cross-origin
-    # → "same-origin"            : isolasi penuh — hanya same-origin
-    #                              yang boleh berbagi browsing group (pilihan kami)
-    # ⚠ same-origin akan memutus integrasi OAuth / payment popup cross-origin.
-    #   Gunakan "same-origin-allow-popups" jika ada flow popup cross-origin.
-    COOP = "same-origin"
+from _headers import registry
 
-    # =========================================================
-    # CROSS-ORIGIN EMBEDDER POLICY (COEP)
-    # Memastikan semua resource yang dimuat halaman ini
-    # secara eksplisit mengizinkan cross-origin embedding.
-    #
-    # Cara kerja:
-    #   Tanpa COEP → browser bebas muat resource cross-origin apapun
-    #   Dengan COEP → resource cross-origin wajib punya CORP atau CORS
-    #                 yang sesuai, jika tidak maka diblokir browser
-    # =========================================================
 
-    # → "unsafe-none"    : tidak ada pembatasan (default browser)
-    # → "require-corp"   : semua resource wajib punya CORP atau CORS (pilihan kami)
-    # → "credentialless" : resource tanpa kredensial bebas dimuat,
-    #                      resource dengan kredensial wajib punya CORP/CORS
-    #                      (lebih longgar, cocok jika ada resource CDN tanpa CORP)
-    # ⚠ "require-corp" akan memblokir resource pihak ketiga (CDN, API, font)
-    #   yang belum pasang header CORP atau CORS.
-    #   Gunakan "credentialless" sebagai alternatif yang lebih permisif.
-    COEP = "require-corp"
+# ---------------------------------------------------------------------------
+# POLICY LAYER
+# ---------------------------------------------------------------------------
 
-    # =========================================================
-    # CROSS-ORIGIN RESOURCE POLICY (CORP)
-    # Mencegah situs lain memuat resource dari server ini
-    # via tag <img>, <script>, <link>, dsb (no-cors request).
-    #
-    # Cara kerja:
-    #   Tanpa CORP → situs manapun bisa embed resource kita
-    #   Dengan CORP → browser blokir request cross-origin
-    #                 yang tidak memenuhi policy ini
-    # =========================================================
+class IsolationHeaderPolicy:
 
-    # → "same-origin"  : hanya same-origin yang boleh memuat (pilihan kami)
-    # → "same-site"    : izinkan seluruh site yang sama (lebih longgar),
-    #                    mencakup semua subdomain dalam satu eTLD+1
-    # → "cross-origin" : izinkan semua origin — gunakan ini jika server
-    #                    adalah CDN atau menyajikan public asset
-    # ⚠ Jika server ini menyajikan resource untuk dikonsumsi situs lain,
-    #   gunakan "cross-origin" agar tidak diblokir browser mereka.
-    CORP = "same-origin"
+    COOP_POLICY = "same-origin"
+    COEP_POLICY = "require-corp"
+    CORP_POLICY = "same-origin"
 
-    # =========================================================
-    # BUILD & APPLY
-    # =========================================================
+    ORIGIN_AGENT_CLUSTER = True
+    REPORT_TO = None
 
-    response.headers["Cross-Origin-Opener-Policy"] = COOP
-    response.headers["Cross-Origin-Embedder-Policy"] = COEP
-    response.headers["Cross-Origin-Resource-Policy"] = CORP
+    PRESET = None  # full | credentialless | none
 
-    return response
+
+# ---------------------------------------------------------------------------
+# HEADER BUILDERS
+# ---------------------------------------------------------------------------
+
+def build_coop_header(policy, report_to=None):
+    headers = {"Cross-Origin-Opener-Policy": policy}
+
+    if report_to:
+        headers["Cross-Origin-Opener-Policy-Report-Only"] = (
+            f"{policy}; report-to={report_to}"
+        )
+
+    return headers
+
+
+def build_coep_header(policy, report_to=None):
+    headers = {"Cross-Origin-Embedder-Policy": policy}
+
+    if report_to:
+        headers["Cross-Origin-Embedder-Policy-Report-Only"] = (
+            f"{policy}; report-to={report_to}"
+        )
+
+    return headers
+
+
+def build_corp_header(policy):
+    return {"Cross-Origin-Resource-Policy": policy}
+
+
+def build_origin_agent_cluster_header(enable):
+    return {"Origin-Agent-Cluster": "?1" if enable else "?0"}
+
+
+def build_observability_headers(elapsed_ms):
+    return {"X-Response-Time": f"{elapsed_ms:.2f}ms"}
+
+
+# ---------------------------------------------------------------------------
+# PRESETS
+# ---------------------------------------------------------------------------
+
+def preset_full_isolation():
+    return {
+        "coop": "same-origin",
+        "coep": "require-corp",
+        "corp": "same-origin",
+        "oac": True,
+    }
+
+
+def preset_credentialless_isolation():
+    return {
+        "coop": "same-origin",
+        "coep": "credentialless",
+        "corp": "same-origin",
+        "oac": True,
+    }
+
+
+def preset_no_isolation():
+    return {
+        "coop": "unsafe-none",
+        "coep": "unsafe-none",
+        "corp": "cross-origin",
+        "oac": False,
+    }
+
+
+# ---------------------------------------------------------------------------
+# PLUGIN INITIALIZER (NO ORCHESTRATOR)
+# ---------------------------------------------------------------------------
+
+def init_isolation_headers():
+
+    def before():
+        # reserved for future context
+        pass
+
+    def after(elapsed_ms):
+        headers = {}
+
+        preset = IsolationHeaderPolicy.PRESET
+
+        # -------------------------
+        # PRESET MODE
+        # -------------------------
+        if preset == "full":
+            config = preset_full_isolation()
+
+        elif preset == "credentialless":
+            config = preset_credentialless_isolation()
+
+        elif preset == "none":
+            config = preset_no_isolation()
+
+        # -------------------------
+        # MANUAL MODE
+        # -------------------------
+        else:
+            config = {
+                "coop": IsolationHeaderPolicy.COOP_POLICY,
+                "coep": IsolationHeaderPolicy.COEP_POLICY,
+                "corp": IsolationHeaderPolicy.CORP_POLICY,
+                "oac": IsolationHeaderPolicy.ORIGIN_AGENT_CLUSTER,
+            }
+
+        # COOP
+        headers.update(
+            build_coop_header(
+                config["coop"],
+                IsolationHeaderPolicy.REPORT_TO,
+            )
+        )
+
+        # COEP
+        headers.update(
+            build_coep_header(
+                config["coep"],
+                IsolationHeaderPolicy.REPORT_TO,
+            )
+        )
+
+        # CORP
+        headers.update(
+            build_corp_header(config["corp"])
+        )
+
+        # Origin Agent Cluster
+        headers.update(
+            build_origin_agent_cluster_header(config["oac"])
+        )
+
+        # Observability
+        headers.update(
+            build_observability_headers(elapsed_ms)
+        )
+
+        return headers
+
+    registry.register(before=before, after=after)

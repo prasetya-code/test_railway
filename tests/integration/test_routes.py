@@ -1,11 +1,7 @@
 from flask import Flask
 from unittest.mock import patch
 
-from app.routes import register_routes
-
-
-class DummyBlueprint:
-    pass
+from app.routes import register_routes, BLUEPRINTS
 
 
 # ==========================================================
@@ -16,10 +12,8 @@ class DummyBlueprint:
 def test_register_routes_success():
     """
     Cover:
-    - import main_bp
-    - import monitor_bp
-    - register blueprint 1
-    - register blueprint 2
+    - loop seluruh blueprint
+    - register semua blueprint
     """
 
     app = Flask(__name__)
@@ -32,7 +26,8 @@ def test_register_routes_success():
     with patch.object(app, "register_blueprint", side_effect=fake_register):
         register_routes(app)
 
-    assert len(registered) == 2
+    assert registered == BLUEPRINTS
+    assert len(registered) == len(BLUEPRINTS)
 
 
 # ==========================================================
@@ -51,7 +46,9 @@ def test_register_routes_exception(mock_print_exc):
     app = Flask(__name__)
 
     with patch.object(
-        app, "register_blueprint", side_effect=Exception("register failed")
+        app,
+        "register_blueprint",
+        side_effect=Exception("register failed"),
     ):
         register_routes(app)
 
@@ -74,7 +71,11 @@ def test_register_routes_print_message(mock_print_exc):
     app = Flask(__name__)
 
     with patch("builtins.print") as mock_print:
-        with patch.object(app, "register_blueprint", side_effect=Exception("boom")):
+        with patch.object(
+            app,
+            "register_blueprint",
+            side_effect=Exception("boom"),
+        ):
             register_routes(app)
 
     assert mock_print.call_count == 2
@@ -89,29 +90,24 @@ def test_register_routes_print_message(mock_print_exc):
 
 
 # ==========================================================
-# VERIFY IMPORTS WORK
+# VERIFY BLUEPRINT LIST
 # ==========================================================
 
 
-def test_blueprints_can_be_imported():
+def test_blueprints_list_is_not_empty():
     """
-    Memastikan line import dalam register_routes
-    memang valid dan executable.
+    Memastikan BLUEPRINTS berisi blueprint yang akan diregister.
     """
 
-    from app.routes.app_routes import main_bp
-    from app.routes.monitor_routes import monitor_bp
-
-    assert main_bp is not None
-    assert monitor_bp is not None
+    assert len(BLUEPRINTS) > 0
 
 
 # ==========================================================
-# VERIFY TWO BLUEPRINTS REGISTERED
+# VERIFY ALL BLUEPRINTS REGISTERED
 # ==========================================================
 
 
-def test_register_routes_registers_exactly_two_blueprints():
+def test_register_routes_registers_all_blueprints():
 
     app = Flask(__name__)
 
@@ -124,4 +120,4 @@ def test_register_routes_registers_exactly_two_blueprints():
     with patch.object(app, "register_blueprint", side_effect=fake_register):
         register_routes(app)
 
-    assert count == 2
+    assert count == len(BLUEPRINTS)

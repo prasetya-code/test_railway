@@ -1,136 +1,209 @@
-def build_cors(response, *, allow_public: bool = False):
-    """
-    Menerapkan header CORS (Cross-Origin Resource Sharing).
-    Mengontrol browser mana yang boleh mengakses resource ini
-    dari halaman yang berbeda origin.
+"""
+CORS (Cross-Origin Resource Sharing) Headers Policy
 
-    Cara kerja CORS:
-      Browser kirim request cross-origin → server balas dengan header CORS
-      → browser baca header → izinkan atau blokir response ke JS client
-      Untuk request kompleks (POST JSON, custom header) → browser kirim
-      preflight OPTIONS dulu → server balas → browser lanjut request asli
+Handles:
+- Access-Control-Allow-Origin
+- Access-Control-Allow-Methods
+- Access-Control-Allow-Headers
+- Access-Control-Expose-Headers
+- Access-Control-Allow-Credentials
+- Access-Control-Max-Age
+- Origin validation
+"""
 
-    Parameter:
-    → allow_public=False : hanya untuk frontend same-origin (default)
-    → allow_public=True  : terbuka untuk pihak ketiga / publik
-    """
+from _headers import registry
 
-    if not allow_public:
-        # Same-origin tidak butuh CORS header sama sekali.
-        # Browser secara default izinkan semua request ke same-origin.
-        return response
 
-    # =========================================================
-    # ORIGIN
-    # =========================================================
+# ---------------------------------------------------------------------------
+# POLICY LAYER
+# ---------------------------------------------------------------------------
 
-    # Access-Control-Allow-Origin — origin mana yang boleh mengakses resource ini
-    # → *                      : semua origin (pilihan kami untuk publik)
-    # → https://domain.com     : satu origin spesifik
-    # → (dinamis dari request) : cocokkan dengan whitelist origin yang diizinkan
-    # ⚠ Nilai "*" tidak bisa dikombinasikan dengan Allow-Credentials: true.
-    #   Jika butuh credentials (cookie, auth header), ganti "*" dengan origin spesifik.
-    ALLOW_ORIGIN = [
-        "*",
-        # "https://app.domain.com",   # aktifkan jika ingin batasi origin spesifik
-        # "https://partner.com",
-    ]
+class CORSHeaderPolicy:
 
-    # Access-Control-Allow-Credentials — izinkan browser kirim credentials cross-origin
-    # → true  : izinkan cookie, Authorization header, TLS client certificate
-    # → false : tidak izinkan (default browser) — cukup hapus header ini
-    # ⚠ Hanya aktifkan jika benar-benar dibutuhkan.
-    #   Wajib kombinasikan dengan ALLOW_ORIGIN spesifik (bukan "*").
-    ALLOW_CREDENTIALS = False
+    ALLOW_ALL_ORIGINS = False
+    ALLOWED_ORIGINS = []
 
-    # =========================================================
-    # PREFLIGHT REQUEST
-    # Browser kirim OPTIONS sebelum request POST/PUT/DELETE atau
-    # request dengan custom header — untuk tanya izin ke server dulu.
-    # =========================================================
+    ALLOWED_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
 
-    # Access-Control-Allow-Methods — HTTP method yang diizinkan
-    # → OPTIONS : wajib ada agar preflight berhasil
-    # → GET     : baca resource
-    # → POST    : buat resource baru
-    # → PUT     : ganti seluruh resource
-    # → PATCH   : ubah sebagian resource
-    # → DELETE  : hapus resource
-    # → HEAD    : seperti GET tapi tanpa body (untuk cek metadata)
-    ALLOW_METHODS = [
-        "GET",
-        "POST",
-        "PUT",
-        "PATCH",
-        "DELETE",
-        "OPTIONS",
-        # "HEAD",   # aktifkan jika endpoint mendukung HEAD request
-    ]
-
-    # Access-Control-Allow-Headers — request header yang boleh dikirim client cross-origin
-    # → Content-Type     : wajib untuk request dengan body JSON / form
-    # → Authorization    : wajib untuk Bearer token / Basic auth
-    # → Accept           : untuk content negotiation (JSON, XML, dsb)
-    # → X-Requested-With : penanda AJAX request (jQuery, Axios)
-    # → X-API-Key        : untuk autentikasi via custom API key header
-    # → X-Request-Id     : untuk tracing, bisa dikirim dari client
-    ALLOW_HEADERS = [
-        "Content-Type",
-        "Authorization",
+    ALLOWED_REQUEST_HEADERS = [
         "Accept",
+        "Authorization",
+        "Content-Type",
+        "Origin",
         "X-Requested-With",
         "X-API-Key",
-        "X-Request-Id",
-        # "X-Custom-Header",  # tambahkan custom header lain jika dibutuhkan
+        "X-Request-ID",
     ]
 
-    # Access-Control-Max-Age — berapa lama browser cache hasil preflight (detik)
-    # → 0      : tidak di-cache, selalu preflight ulang
-    # → 3600   : 1 jam
-    # → 86400  : 1 hari (pilihan kami — kurangi jumlah preflight request)
-    # → 7200   : batas maksimum di Chromium
-    # ⚠ Firefox membatasi maksimum 86400, Chromium 7200.
-    #   Nilai di atas 7200 akan diabaikan Chromium.
-    MAX_AGE = "86400"
-
-    # =========================================================
-    # EXPOSE HEADERS
-    # Header response yang boleh dibaca JS client cross-origin.
-    # Secara default browser hanya ekspos header "safe" (Content-Type, dsb).
-    # Header custom wajib didaftarkan di sini agar bisa dibaca JS.
-    # =========================================================
-
-    # Access-Control-Expose-Headers — response header yang bisa diakses JS
-    # → X-Request-Id         : ID unik per request untuk tracing / laporan error
-    # → X-RateLimit-Limit    : total kuota request dalam satu window
-    # → X-RateLimit-Remaining: sisa kuota request
-    # → X-RateLimit-Reset    : waktu reset kuota (Unix timestamp)
-    # → X-API-Version        : versi API yang melayani request
-    EXPOSE_HEADERS = [
-        "X-Request-Id",
-        "X-RateLimit-Limit",
-        "X-RateLimit-Remaining",
-        "X-RateLimit-Reset",
-        "X-API-Version",
-        # "X-Custom-Header",  # tambahkan header lain yang perlu dibaca JS client
+    EXPOSED_HEADERS = [
+        "Content-Type",
+        "Content-Length",
+        "ETag",
+        "X-Request-ID",
+        "X-Rate-Limit-Limit",
+        "X-Rate-Limit-Remaining",
+        "X-Rate-Limit-Reset",
     ]
 
-    # =========================================================
-    # BUILD & APPLY
-    # =========================================================
+    ALLOW_CREDENTIALS = False
+    PREFLIGHT_MAX_AGE = 600
 
-    response.headers["Access-Control-Allow-Origin"] = ", ".join(ALLOW_ORIGIN)
-    response.headers["Access-Control-Allow-Methods"] = ", ".join(ALLOW_METHODS)
-    response.headers["Access-Control-Allow-Headers"] = ", ".join(ALLOW_HEADERS)
-    response.headers["Access-Control-Max-Age"] = MAX_AGE
-    response.headers["Access-Control-Expose-Headers"] = ", ".join(EXPOSE_HEADERS)
 
-    if ALLOW_CREDENTIALS:
-        response.headers["Access-Control-Allow-Credentials"] = "true"
+# ---------------------------------------------------------------------------
+# BUILDERS
+# ---------------------------------------------------------------------------
 
-    # Vary: Origin — wajib jika origin di-whitelist secara dinamis (bukan "*")
-    # Memberitahu proxy/CDN bahwa response berbeda per origin.
-    # → aktifkan jika ALLOW_ORIGIN berisi domain spesifik (bukan "*")
-    # response.headers["Vary"] = "Origin"
+def build_allow_origin_header(allowed_origins, request_origin, allow_all):
+    if allow_all:
+        return {"Access-Control-Allow-Origin": "*"}
 
-    return response
+    if request_origin and request_origin in allowed_origins:
+        return {
+            "Access-Control-Allow-Origin": request_origin,
+            "Vary": "Origin",
+        }
+
+    if not request_origin and allowed_origins:
+        return {
+            "Access-Control-Allow-Origin": allowed_origins[0],
+            "Vary": "Origin",
+        }
+
+    return {}
+
+
+def build_allow_methods_header(methods):
+    if not methods:
+        return {}
+
+    return {
+        "Access-Control-Allow-Methods": ", ".join(m.upper() for m in methods)
+    }
+
+
+def build_allow_headers_header(headers):
+    if not headers:
+        return {}
+
+    return {
+        "Access-Control-Allow-Headers": ", ".join(headers)
+    }
+
+
+def build_expose_headers_header(headers):
+    if not headers:
+        return {}
+
+    return {
+        "Access-Control-Expose-Headers": ", ".join(headers)
+    }
+
+
+def build_allow_credentials_header(allow):
+    return {
+        "Access-Control-Allow-Credentials": "true" if allow else "false"
+    }
+
+
+def build_max_age_header(max_age):
+    return {
+        "Access-Control-Max-Age": str(max_age)
+    }
+
+
+def build_observability_headers(elapsed_ms):
+    return {
+        "X-Response-Time": f"{elapsed_ms:.2f}ms"
+    }
+
+
+# ---------------------------------------------------------------------------
+# PLUGIN INITIALIZER (NO ORCHESTRATOR)
+# ---------------------------------------------------------------------------
+
+def init_cors_headers():
+
+    def before():
+        return {
+            "cors_origin": None
+        }
+
+    def after(elapsed_ms, request):
+
+        origin = request.headers.get("Origin")
+
+        headers = {}
+
+        if request.method == "OPTIONS":
+
+            headers.update(
+                build_allow_origin_header(
+                    CORSHeaderPolicy.ALLOWED_ORIGINS,
+                    origin,
+                    CORSHeaderPolicy.ALLOW_ALL_ORIGINS,
+                )
+            )
+
+            headers.update(
+                build_allow_methods_header(
+                    CORSHeaderPolicy.ALLOWED_METHODS
+                )
+            )
+
+            headers.update(
+                build_allow_headers_header(
+                    CORSHeaderPolicy.ALLOWED_REQUEST_HEADERS
+                )
+            )
+
+            headers.update(
+                build_allow_credentials_header(
+                    CORSHeaderPolicy.ALLOW_CREDENTIALS
+                )
+            )
+
+            headers.update(
+                build_max_age_header(
+                    CORSHeaderPolicy.PREFLIGHT_MAX_AGE
+                )
+            )
+
+        else:
+
+            headers.update(
+                build_allow_origin_header(
+                    CORSHeaderPolicy.ALLOWED_ORIGINS,
+                    origin,
+                    CORSHeaderPolicy.ALLOW_ALL_ORIGINS,
+                )
+            )
+
+            headers.update(
+                build_allow_methods_header(
+                    CORSHeaderPolicy.ALLOWED_METHODS
+                )
+            )
+
+            headers.update(
+                build_allow_headers_header(
+                    CORSHeaderPolicy.ALLOWED_REQUEST_HEADERS
+                )
+            )
+
+            headers.update(
+                build_expose_headers_header(
+                    CORSHeaderPolicy.EXPOSED_HEADERS
+                )
+            )
+
+            headers.update(
+                build_allow_credentials_header(
+                    CORSHeaderPolicy.ALLOW_CREDENTIALS
+                )
+            )
+
+        headers.update(build_observability_headers(elapsed_ms))
+
+        return headers
+
+    registry.register(before=before, after=after)
