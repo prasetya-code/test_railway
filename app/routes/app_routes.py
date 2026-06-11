@@ -3,7 +3,7 @@ from flask import Blueprint, render_template
 from app.extensions.flask_cache import fl_cache
 from app.extensions.flask_limit import fl_limiter
 
-from config.logging.log_parser import (
+from config.log_system import (
     app_logger,
     security_event,
 )

@@ -1,0 +1,4 @@
+Contact: mailto:your_email@example.com
+Encryption: https://yourdomain.com/pgp.txt
+Acknowledgements: https://yourdomain.com/security
+# meta_version: 1.0.0

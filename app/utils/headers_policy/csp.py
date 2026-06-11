@@ -1,173 +1,206 @@
-def build_csp(response):
-    """
-    Menerapkan header Content-Security-Policy (CSP).
-    Whitelist sumber konten yang boleh dimuat browser — lapisan utama pertahanan XSS.
+"""
+Content Security Policy (CSP) Headers Policy
 
-    Setiap directive berbentuk list/array agar mudah ditambah atau dihapus per item.
-    Tambahkan domain eksternal langsung ke array directive yang relevan.
-    """
+Handles:
+- Content-Security-Policy (enforce mode)
+- Content-Security-Policy-Report-Only (monitoring mode)
+- Fetch directives
+- Navigation directives
+- Document directives
+- Reporting
+- Trusted Types
+"""
 
-    # =========================================================
-    # FETCH DIRECTIVES
-    # Mengontrol dari mana browser boleh memuat resource.
-    # Urutan prioritas: directive spesifik > default-src.
-    #
-    # Nilai umum yang bisa ditambahkan ke array:
-    # → 'self'              : hanya origin sendiri (protokol + domain + port sama)
-    # → 'none'              : blokir semua
-    # → 'unsafe-inline'     : izinkan inline script/style — HINDARI
-    # → 'unsafe-eval'       : izinkan eval() — HINDARI jika bisa
-    # → 'nonce-<token>'     : izinkan elemen dengan nonce spesifik
-    # → 'strict-dynamic'    : percayai script yang sudah diizinkan nonce/hash
-    # → 'wasm-unsafe-eval'  : izinkan WebAssembly
-    # → data:               : izinkan data URI base64
-    # → blob:               : izinkan blob URL
-    # → https:              : izinkan semua HTTPS
-    # → https://domain.com  : izinkan domain spesifik
-    # → wss://domain.com    : izinkan WebSocket ke domain spesifik
-    # =========================================================
+from _headers import registry
 
-    # default-src — fallback untuk semua directive fetch yang tidak didefinisikan
-    DEFAULT_SRC = [
-        "'self'",
-    ]
 
-    # script-src — sumber JS yang boleh dieksekusi
-    # ⚠ Jangan tambahkan 'unsafe-inline' — ini membatalkan proteksi XSS.
-    SCRIPT_SRC = [
-        "'self'",
-    ]
+# ---------------------------------------------------------------------------
+# POLICY LAYER
+# ---------------------------------------------------------------------------
 
-    # style-src — sumber CSS yang boleh diterapkan
-    # ⚠ Framework CSS modern kadang butuh 'unsafe-inline' —
-    #   pertimbangkan 'nonce-<token>' sebagai alternatif yang lebih aman.
-    STYLE_SRC = [
-        "'self'",
-        # "'unsafe-inline'",          # aktifkan jika pakai Tailwind CDN / inline style
-        # "https://fonts.googleapis.com",  # aktifkan jika pakai Google Fonts
-    ]
+class CSPHeaderPolicy:
 
-    # img-src — sumber gambar (<img>, background-image CSS, favicon)
-    IMG_SRC = [
-        "'self'",
-        "data:",  # base64 inline image / placeholder
-        # "blob:",                     # aktifkan jika ada preview upload
-        # "https://cdn.domain.com",    # aktifkan jika gambar dari CDN eksternal
-    ]
+    REPORT_ONLY = False
 
-    # font-src — sumber file font (@font-face)
-    FONT_SRC = [
-        "'self'",
-        # "https://fonts.gstatic.com", # aktifkan jika pakai Google Fonts
-    ]
+    DEFAULT_SRC = ["'self'"]
+    SCRIPT_SRC = ["'self'"]
+    STYLE_SRC = ["'self'"]
+    IMG_SRC = ["'self'"]
+    FONT_SRC = ["'self'"]
+    CONNECT_SRC = ["'self'"]
+    MEDIA_SRC = ["'none'"]
+    OBJECT_SRC = ["'none'"]
+    FRAME_SRC = ["'none'"]
+    WORKER_SRC = ["'self'"]
 
-    # connect-src — sumber untuk koneksi JS (fetch, XHR, WebSocket, EventSource)
-    CONNECT_SRC = [
-        "'self'",
-        # "https://api.domain.com",    # aktifkan jika ada API eksternal
-        # "wss://ws.domain.com",       # aktifkan jika ada WebSocket eksternal
-    ]
+    FORM_ACTION = ["'self'"]
+    FRAME_ANCESTORS = ["'none'"]
 
-    # media-src — sumber untuk <audio> dan <video>
-    MEDIA_SRC = [
-        "'none'",  # tidak ada kebutuhan media — blokir semua
-        # "'self'",                    # aktifkan jika ada audio/video dari server sendiri
-    ]
+    BASE_URI = ["'self'"]
+    SANDBOX = None
 
-    # worker-src — sumber untuk Web Worker, Service Worker, SharedWorker
-    WORKER_SRC = [
-        "'self'",
-        # "blob:",                     # aktifkan jika pakai bundler (Webpack, Vite)
-    ]
+    REPORT_URI = None
+    REPORT_TO = None
 
-    # child-src — sumber untuk <frame>, <iframe>, dan worker
-    #             (fallback sebelum worker-src / frame-src didefinisikan)
-    CHILD_SRC = [
-        "'none'",  # blokir semua child context
-    ]
+    TRUSTED_TYPES = None
 
-    # manifest-src — sumber untuk file Web App Manifest (manifest.json)
-    MANIFEST_SRC = [
-        "'self'",
-    ]
+    PRESET = None  # strict | api | None
 
-    # =========================================================
-    # DOCUMENT DIRECTIVES
-    # Mengontrol properti dokumen itu sendiri, bukan resource-nya.
-    # =========================================================
 
-    # base-uri — nilai yang diizinkan untuk tag <base href="">
-    # ⚠ Tanpa ini, penyerang bisa inject <base href="https://evil.com">
-    #   sehingga semua relative URL mengarah ke domain mereka.
-    BASE_URI = [
-        "'self'",
-        # "'none'",                    # alternatif: larang tag <base> sama sekali
-    ]
+# ---------------------------------------------------------------------------
+# BUILDERS
+# ---------------------------------------------------------------------------
 
-    # =========================================================
-    # NAVIGATION DIRECTIVES
-    # Mengontrol ke mana browser boleh dinavigasikan.
-    # =========================================================
+def build_directives(mapping):
+    directives = {}
 
-    # form-action — URL yang diizinkan sebagai target <form action="">
-    # ⚠ Tanpa ini, form bisa di-hijack untuk submit ke domain penyerang.
-    FORM_ACTION = [
-        "'self'",
-        # "https://api.domain.com",    # aktifkan jika form submit ke API eksternal
-    ]
+    for key, value in mapping.items():
+        if value is not None:
+            directives[key] = value
 
-    # frame-ancestors — siapa yang boleh embed halaman ini via <iframe>, <frame>, <object>
-    # ⚠ Directive ini MENGGANTIKAN X-Frame-Options di browser modern.
-    FRAME_ANCESTORS = [
-        "'none'",  # tidak boleh di-embed siapapun
-        # "'self'",                    # alternatif: izinkan embed oleh origin sendiri
-        # "https://dashboard.domain.com", # alternatif: izinkan domain spesifik
-    ]
+    return directives
 
-    # =========================================================
-    # OTHER DIRECTIVES
-    # =========================================================
 
-    # object-src — sumber untuk <object>, <embed>, <applet> (plugin lama: Flash, Java)
-    # ⚠ Plugin lama adalah vektor serangan besar — selalu set ke 'none'.
-    OBJECT_SRC = [
-        "'none'",
-    ]
+def build_fetch_directives():
+    return build_directives({
+        "default-src": CSPHeaderPolicy.DEFAULT_SRC,
+        "script-src": CSPHeaderPolicy.SCRIPT_SRC,
+        "style-src": CSPHeaderPolicy.STYLE_SRC,
+        "img-src": CSPHeaderPolicy.IMG_SRC,
+        "font-src": CSPHeaderPolicy.FONT_SRC,
+        "connect-src": CSPHeaderPolicy.CONNECT_SRC,
+        "media-src": CSPHeaderPolicy.MEDIA_SRC,
+        "object-src": CSPHeaderPolicy.OBJECT_SRC,
+        "frame-src": CSPHeaderPolicy.FRAME_SRC,
+        "worker-src": CSPHeaderPolicy.WORKER_SRC,
+    })
 
-    # upgrade-insecure-requests — paksa semua request HTTP menjadi HTTPS otomatis
-    # ⚠ Berbeda dengan HSTS: directive ini hanya berlaku dalam scope halaman,
-    #   bukan di level browser secara keseluruhan.
-    UPGRADE_INSECURE = True
 
-    # =========================================================
-    # BUILD & APPLY
-    # Susun semua directive dari array menjadi satu string header CSP.
-    # =========================================================
+def build_navigation_directives():
+    return build_directives({
+        "form-action": CSPHeaderPolicy.FORM_ACTION,
+        "frame-ancestors": CSPHeaderPolicy.FRAME_ANCESTORS,
+    })
 
-    directives = {
-        "default-src": DEFAULT_SRC,
-        "script-src": SCRIPT_SRC,
-        "style-src": STYLE_SRC,
-        "img-src": IMG_SRC,
-        "font-src": FONT_SRC,
-        "connect-src": CONNECT_SRC,
-        "media-src": MEDIA_SRC,
-        "worker-src": WORKER_SRC,
-        "child-src": CHILD_SRC,
-        "manifest-src": MANIFEST_SRC,
-        "base-uri": BASE_URI,
-        "form-action": FORM_ACTION,
-        "frame-ancestors": FRAME_ANCESTORS,
-        "object-src": OBJECT_SRC,
+
+def build_document_directives():
+    return build_directives({
+        "base-uri": CSPHeaderPolicy.BASE_URI,
+        "sandbox": CSPHeaderPolicy.SANDBOX,
+    })
+
+
+def build_reporting_directives():
+    return build_directives({
+        "report-uri": CSPHeaderPolicy.REPORT_URI,
+        "report-to": CSPHeaderPolicy.REPORT_TO,
+    })
+
+
+def build_trusted_types_directive():
+    if not CSPHeaderPolicy.TRUSTED_TYPES:
+        return {}
+
+    return {
+        "trusted-types": " ".join(CSPHeaderPolicy.TRUSTED_TYPES)
     }
 
-    policy = "; ".join(
-        f"{directive} {' '.join(sources)}" for directive, sources in directives.items()
+
+# ---------------------------------------------------------------------------
+# ASSEMBLER
+# ---------------------------------------------------------------------------
+
+def assemble_csp_policy(directives):
+    parts = []
+
+    for directive, value in directives.items():
+
+        if isinstance(value, list):
+            parts.append(f"{directive} {' '.join(value)}")
+
+        elif isinstance(value, str):
+            parts.append(f"{directive} {value}")
+
+    return "; ".join(parts)
+
+
+def build_csp_header(policy):
+    key = (
+        "Content-Security-Policy-Report-Only"
+        if CSPHeaderPolicy.REPORT_ONLY
+        else "Content-Security-Policy"
     )
 
-    if UPGRADE_INSECURE:
-        policy += "; upgrade-insecure-requests"
+    return {key: policy}
 
-    response.headers["Content-Security-Policy"] = policy
 
-    return response
+# ---------------------------------------------------------------------------
+# PRESETS
+# ---------------------------------------------------------------------------
+
+def preset_strict():
+    return assemble_csp_policy({
+        "default-src": ["'self'"],
+        "script-src": ["'strict-dynamic'", "'self'"],
+        "style-src": ["'self'", "'unsafe-inline'"],
+        "img-src": ["'self'", "data:", "https:"],
+        "font-src": ["'self'"],
+        "connect-src": ["'self'"],
+        "media-src": ["'none'"],
+        "object-src": ["'none'"],
+        "frame-src": ["'none'"],
+        "worker-src": ["'self'"],
+        "form-action": ["'self'"],
+        "frame-ancestors": ["'none'"],
+        "base-uri": ["'self'"],
+    })
+
+
+def preset_api():
+    return assemble_csp_policy({
+        "default-src": ["'none'"],
+        "form-action": ["'none'"],
+        "frame-ancestors": ["'none'"],
+        "base-uri": ["'none'"],
+    })
+
+
+# ---------------------------------------------------------------------------
+# PLUGIN INITIALIZER (NO ORCHESTRATOR)
+# ---------------------------------------------------------------------------
+
+def init_csp_headers():
+
+    def before():
+        return {
+            "csp_context": {}
+        }
+
+    def after(elapsed_ms, request):
+
+        if CSPHeaderPolicy.PRESET == "strict":
+            policy = preset_strict()
+
+        elif CSPHeaderPolicy.PRESET == "api":
+            policy = preset_api()
+
+        else:
+            directives = {
+                **build_fetch_directives(),
+                **build_navigation_directives(),
+                **build_document_directives(),
+                **build_reporting_directives(),
+                **build_trusted_types_directive(),
+            }
+
+            policy = assemble_csp_policy(directives)
+
+        headers = build_csp_header(policy)
+
+        headers.update({
+            "X-Response-Time": f"{elapsed_ms:.2f}ms"
+        })
+
+        return headers
+
+    registry.register(before=before, after=after)

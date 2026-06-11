@@ -1,36 +1,134 @@
-from .hardening import build_hardening
-from .csp import build_csp
-from .transport import build_transport
-from .isolation import build_isolation
-from .cache import build_cache
+"""
+Browser Behavior Headers Policy
+
+Handles:
+- MIME sniffing protection (X-Content-Type-Options)
+- Clickjacking protection (X-Frame-Options)
+- Legacy XSS protection (X-XSS-Protection)
+- DNS prefetch control (X-DNS-Prefetch-Control)
+- Download behavior protection (X-Download-Options)
+- Cross-domain policy control (X-Permitted-Cross-Domain-Policies)
+- Content-Type enforcement (Content-Type)
+- Range request support (Accept-Ranges)
+"""
+
+from _headers import registry
+from flask import request
 
 
-""" FILE CORS DAN API BELUM DI TERAPKAN KE SINI """
+# ---------------------------------------------------------------------------
+# POLICY LAYER
+# ---------------------------------------------------------------------------
+
+class BrowserHeaderPolicy:
+
+    NOSNIFF = True
+    FRAME_POLICY = "DENY"
+    XSS_PROTECTION = False
+    DNS_PREFETCH = False
+    DOWNLOAD_OPTIONS = True
+    CROSS_DOMAIN_POLICY = "none"
+
+    MIME_TYPE = "text/html"
+    CHARSET = "utf-8"
+
+    ACCEPT_RANGES = "bytes"
 
 
-def browser_privacy(response):
-    """
-    Orchestrator header keamanan dan privasi browser.
-    Dipanggil sekali per response untuk halaman HTML / aset browser.
-    Setiap file menangani satu kelompok header — tidak ada overlap.
+# ---------------------------------------------------------------------------
+# BUILDERS
+# (tetap dipakai tapi tidak lagi orchestration)
+# ---------------------------------------------------------------------------
 
-    Urutan eksekusi:
-      1. hardening.py  → X-Content-Type-Options, X-Frame-Options,
-                         X-XSS-Protection, Referrer-Policy, Permissions-Policy
-      2. csp.py        → Content-Security-Policy
-      3. transport.py  → Strict-Transport-Security
-      4. isolation.py  → Cross-Origin-Opener-Policy,
-                         Cross-Origin-Embedder-Policy,
-                         Cross-Origin-Resource-Policy
-      5. cache.py      → Cache-Control
+def build_content_type_options_header():
+    return {
+        "X-Content-Type-Options": "nosniff" if BrowserHeaderPolicy.NOSNIFF else ""
+    }
 
-    Untuk API endpoint, gunakan build_api() dari api.py — bukan fungsi ini.
-    """
 
-    build_hardening(response)
-    build_csp(response)
-    build_transport(response)
-    build_isolation(response)
-    build_cache(response)
+def build_frame_options_header():
+    return {
+        "X-Frame-Options": BrowserHeaderPolicy.FRAME_POLICY
+    }
 
-    return response
+
+def build_xss_protection_header():
+    return {
+        "X-XSS-Protection": "1; mode=block"
+        if BrowserHeaderPolicy.XSS_PROTECTION
+        else "0"
+    }
+
+
+def build_dns_prefetch_control_header():
+    return {
+        "X-DNS-Prefetch-Control": "on"
+        if BrowserHeaderPolicy.DNS_PREFETCH
+        else "off"
+    }
+
+
+def build_download_options_header():
+    return {"X-Download-Options": "noopen"}
+
+
+def build_cross_domain_policy_header():
+    return {
+        "X-Permitted-Cross-Domain-Policies": BrowserHeaderPolicy.CROSS_DOMAIN_POLICY
+    }
+
+
+def build_content_type_header(mime_type, charset):
+    binary_types = {
+        "image/",
+        "audio/",
+        "video/",
+        "application/octet-stream",
+    }
+
+    is_binary = any(mime_type.startswith(p) for p in binary_types)
+
+    value = mime_type if is_binary else f"{mime_type}; charset={charset}"
+
+    return {"Content-Type": value}
+
+
+def build_accept_ranges_header():
+    return {"Accept-Ranges": BrowserHeaderPolicy.ACCEPT_RANGES}
+
+
+def build_observability_headers(elapsed_ms):
+    return {"X-Response-Time": f"{elapsed_ms:.2f}ms"}
+
+
+# ---------------------------------------------------------------------------
+# PLUGIN REGISTRATION (NO ORCHESTRATOR)
+# ---------------------------------------------------------------------------
+
+def init_browser_headers():
+
+    def before():
+        request.browser_context = {
+            **build_content_type_options_header(),
+            **build_frame_options_header(),
+            **build_xss_protection_header(),
+            **build_dns_prefetch_control_header(),
+            **build_cross_domain_policy_header(),
+        }
+
+    def after(elapsed_ms):
+        headers = {
+            **build_content_type_header(
+                BrowserHeaderPolicy.MIME_TYPE,
+                BrowserHeaderPolicy.CHARSET,
+            ),
+            **build_accept_ranges_header(),
+            **build_observability_headers(elapsed_ms),
+        }
+
+        if BrowserHeaderPolicy.DOWNLOAD_OPTIONS:
+            headers.update(build_download_options_header())
+
+        return headers
+
+    registry.register(before=before, after=after)

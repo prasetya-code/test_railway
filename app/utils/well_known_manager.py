@@ -1,4 +1,4 @@
-from config.logging.log_parser import app_logger
+from config.log_system import app_logger
 from pathlib import Path
 
 import json

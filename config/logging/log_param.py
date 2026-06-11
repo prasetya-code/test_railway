@@ -1,6 +1,3 @@
-from .rotate_parser import setup_logger
-
-
 # =========================================================
 # FIELD REGISTRY
 # =========================================================
@@ -96,32 +93,6 @@ LOGGER_SCHEMAS = {
 
 
 # =========================================================
-# COMPOSER
-# =========================================================
-
-
-def compose_fields(*groups):
-
-    fields = []
-
-    for group in groups:
-        fields.extend(FIELD_GROUPS.get(group, []))
-
-    return list(dict.fromkeys(fields))
-
-
-# =========================================================
-# FIELDS
-# =========================================================
-
-APP_FIELDS = compose_fields(*LOGGER_SCHEMAS["APP"])
-
-ACCESS_FIELDS = compose_fields(*LOGGER_SCHEMAS["ACCESS"])
-
-SECURITY_FIELDS = compose_fields(*LOGGER_SCHEMAS["SECURITY"])
-
-
-# =========================================================
 # SECURITY EVENT REGISTRY (CONSISTENT SCHEMA)
 # =========================================================
 
@@ -166,43 +137,44 @@ SECURITY_EVENTS = {
         "blocked": True,
         "log_hash": None,
     },
+    "PATH_TRAVERSAL": {
+        "event_type": "REQUEST",
+        "threat_type": "PATH_TRAVERSAL",
+        "severity": "HIGH",
+        "auth_user": None,
+        "auth_method": None,
+        "login_result": None,
+        "blocked": True,
+        "log_hash": None,
+    },
+    "INVALID_FILE": {
+        "event_type": "REQUEST",
+        "threat_type": "INVALID_FILE",
+        "severity": "MEDIUM",
+        "auth_user": None,
+        "auth_method": None,
+        "login_result": None,
+        "blocked": True,
+        "log_hash": None,
+    },
+    "INVALID_REFERER": {
+        "event_type": "REQUEST",
+        "threat_type": "INVALID_REFERER",
+        "severity": "MEDIUM",
+        "auth_user": None,
+        "auth_method": None,
+        "login_result": None,
+        "blocked": True,
+        "log_hash": None,
+    },
+    "FILE_SERVING_ERROR": {
+        "event_type": "FILE",
+        "threat_type": "FILE_SERVING_ERROR",
+        "severity": "MEDIUM",
+        "auth_user": None,
+        "auth_method": None,
+        "login_result": None,
+        "blocked": False,
+        "log_hash": None,
+    },
 }
-
-
-# =========================================================
-# SECURITY LOGGER HELPER
-# =========================================================
-
-
-def security_event(event_name, message=None):
-
-    event = SECURITY_EVENTS.get(event_name)
-
-    if not event:
-        security_logger.warning(f"UNKNOWN_SECURITY_EVENT: {event_name}")
-        return
-
-    security_logger.warning(
-        message or event_name,
-        extra=event,
-    )
-
-
-# =========================================================
-# LOGGERS
-# =========================================================
-
-app_logger = setup_logger(
-    logger_name="APP",
-    fields=APP_FIELDS,
-)
-
-access_logger = setup_logger(
-    logger_name="ACCESS",
-    fields=ACCESS_FIELDS,
-)
-
-security_logger = setup_logger(
-    logger_name="SECURITY",
-    fields=SECURITY_FIELDS,
-)

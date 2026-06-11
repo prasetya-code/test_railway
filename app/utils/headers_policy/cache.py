@@ -1,78 +1,208 @@
-def build_cache(response):
-    """
-    Menerapkan header Cache-Control sesuai tipe konten response.
-    Data sensitif tidak di-cache, static asset di-cache agresif.
+"""
+Cache Control Headers Policy
 
-    Header yang dikelola file ini:
-      Cache-Control, Pragma, Expires
-    """
+Handles:
+- Cache-Control (strategi caching utama)
+- Pragma (legacy cache control)
+- Expires (HTTP/1.0 compatibility)
+- ETag (cache validation)
+- Last-Modified (conditional request)
+- Vary (cache variation rules)
+- Age (CDN/proxy cache age)
+- Clear-Site-Data (reset client cache/session data)
+"""
 
-    if response.mimetype == "application/json":
-        # =====================================================
-        # JSON / DATA API — dilarang cache
-        # Berisi data dinamis atau sensitif per user/session.
-        #
-        # Cache-Control:
-        # → no-store          : jangan simpan di cache manapun — browser, proxy, CDN (pilihan kami)
-        # → no-cache          : simpan tapi wajib validasi ke server sebelum dipakai
-        # → private           : hanya boleh di-cache browser, bukan proxy/CDN
-        # → max-age=0         : langsung expired, kombinasikan dengan must-revalidate
-        # → must-revalidate   : setelah expired, wajib tanya server sebelum pakai cache lama
-        # =====================================================
-        response.headers["Cache-Control"] = "no-store"
+from _headers import registry
+from datetime import datetime
 
-    elif response.mimetype == "text/html":
-        # =====================================================
-        # HTML — cache singkat, wajib revalidasi
-        # Sering mengandung data user-specific (nama, sesi, CSRF token).
-        # Tidak boleh di-cache proxy/CDN karena tiap user bisa dapat
-        # konten berbeda dari URL yang sama.
-        #
-        # Cache-Control:
-        # → private           : hanya boleh di-cache browser, bukan proxy/CDN (pilihan kami)
-        # → no-store          : jangan cache sama sekali
-        # → max-age=0         : langsung expired (pilihan kami)
-        # → must-revalidate   : setelah expired, wajib validasi ke server (pilihan kami)
-        # → no-cache          : simpan tapi selalu validasi sebelum pakai
-        # ⚠ Jangan pakai no-store untuk HTML — browser butuh cache untuk tombol Back.
-        # =====================================================
-        response.headers["Cache-Control"] = "private, max-age=0, must-revalidate"
 
-    else:
-        # =====================================================
-        # STATIC ASSET — cache agresif
-        # JS, CSS, gambar, font — konten tidak berubah selama nama file sama.
-        # Aman di-cache lama karena static asset wajib pakai cache-busting hash.
-        #
-        # Cache-Control:
-        # → public                   : boleh di-cache browser, proxy, dan CDN (pilihan kami)
-        # → private                  : hanya boleh di-cache browser saja
-        # → max-age=31536000         : cache berlaku 1 tahun sejak response (pilihan kami)
-        # → s-maxage=N               : override max-age khusus untuk proxy/CDN
-        # → immutable                : file tidak berubah selama max-age —
-        #                              browser skip re-validasi saat refresh (pilihan kami)
-        # → must-revalidate          : setelah expired, wajib validasi ke server
-        # → stale-while-revalidate=N : sajikan cache lama selama N detik
-        #                              sambil fetch versi baru di background
-        # ⚠ Wajib pakai cache-busting hash di nama file sebelum memakai max-age panjang + immutable.
-        #   Contoh: main.a3f9c1.js — jika file berubah, nama berubah,
-        #   cache lama otomatis tidak terpakai.
-        # =====================================================
-        response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+# ---------------------------------------------------------------------------
+# POLICY LAYER
+# ---------------------------------------------------------------------------
 
-    # Pragma: no-cache
-    # Header cache lama untuk HTTP/1.0 client dan proxy lama
-    # yang tidak mengenal Cache-Control.
-    # → no-cache : satu-satunya nilai yang relevan di sini
-    # ⚠ Hanya berlaku untuk response yang memang tidak boleh di-cache.
-    #   Untuk static asset, header ini tidak dikirim.
-    if response.mimetype in ("application/json", "text/html"):
-        response.headers["Pragma"] = "no-cache"
+class CacheHeaderPolicy:
 
-        # Expires: 0
-        # Tanggal kedaluwarsa untuk HTTP/1.0 client.
-        # → 0    : sudah expired — paksa client selalu fetch ulang
-        # → <HTTP-date> : tanggal spesifik kedaluwarsa cache
-        response.headers["Expires"] = "0"
+    NO_STORE = False
+    NO_CACHE = False
+    MUST_REVALIDATE = False
+    PUBLIC = False
+    PRIVATE = True
 
-    return response
+    MAX_AGE = None
+    S_MAXAGE = None
+
+    IMMUTABLE = False
+    STALE_WHILE_REVALIDATE = None
+    STALE_IF_ERROR = None
+
+    PRAGMA_NO_CACHE = False
+
+    VARY = None
+    AGE_SECONDS = None
+
+    CLEAR_CACHE = False
+    CLEAR_COOKIES = False
+    CLEAR_STORAGE = False
+
+
+# ---------------------------------------------------------------------------
+# BUILDERS (tetap dipakai)
+# ---------------------------------------------------------------------------
+
+def build_cache_control_header(
+    no_store=False,
+    no_cache=False,
+    must_revalidate=False,
+    public=False,
+    private=True,
+    max_age=None,
+    s_maxage=None,
+    immutable=False,
+    stale_while_revalidate=None,
+    stale_if_error=None,
+):
+    directives = []
+
+    if no_store:
+        directives.append("no-store")
+
+    if no_cache:
+        directives.append("no-cache")
+
+    if must_revalidate:
+        directives.append("must-revalidate")
+
+    if public:
+        directives.append("public")
+    elif private:
+        directives.append("private")
+
+    if max_age is not None:
+        directives.append(f"max-age={max_age}")
+
+    if s_maxage is not None:
+        directives.append(f"s-maxage={s_maxage}")
+
+    if immutable:
+        directives.append("immutable")
+
+    if stale_while_revalidate is not None:
+        directives.append(f"stale-while-revalidate={stale_while_revalidate}")
+
+    if stale_if_error is not None:
+        directives.append(f"stale-if-error={stale_if_error}")
+
+    return {
+        "Cache-Control": ", ".join(directives) if directives else "no-store"
+    }
+
+
+def build_pragma_header(no_cache=True):
+    return {"Pragma": "no-cache" if no_cache else ""}
+
+
+def build_expires_header(expires_at=None):
+    if expires_at is None:
+        return {"Expires": "0"}
+
+    return {
+        "Expires": expires_at.strftime("%a, %d %b %Y %H:%M:%S GMT")
+    }
+
+
+def build_vary_header(headers):
+    if not headers:
+        return {}
+
+    return {"Vary": ", ".join(headers)}
+
+
+def build_age_header(age_seconds):
+    return {"Age": str(age_seconds)}
+
+
+def build_clear_site_data_header(
+    cache=True,
+    cookies=False,
+    storage=False,
+    execution_contexts=False,
+):
+    targets = []
+
+    if cache:
+        targets.append('"cache"')
+
+    if cookies:
+        targets.append('"cookies"')
+
+    if storage:
+        targets.append('"storage"')
+
+    if execution_contexts:
+        targets.append('"executionContexts"')
+
+    if not targets:
+        return {}
+
+    return {"Clear-Site-Data": ", ".join(targets)}
+
+
+def build_observability_headers(elapsed_ms):
+    return {"X-Response-Time": f"{elapsed_ms:.2f}ms"}
+
+
+# ---------------------------------------------------------------------------
+# PLUGIN INITIALIZER (NO ORCHESTRATOR)
+# ---------------------------------------------------------------------------
+
+def init_cache_headers():
+
+    def before():
+        # optional future cache context
+        pass
+
+    def after(elapsed_ms):
+        headers = {}
+
+        headers.update(
+            build_cache_control_header(
+                no_store=CacheHeaderPolicy.NO_STORE,
+                no_cache=CacheHeaderPolicy.NO_CACHE,
+                must_revalidate=CacheHeaderPolicy.MUST_REVALIDATE,
+                public=CacheHeaderPolicy.PUBLIC,
+                private=CacheHeaderPolicy.PRIVATE,
+                max_age=CacheHeaderPolicy.MAX_AGE,
+                s_maxage=CacheHeaderPolicy.S_MAXAGE,
+                immutable=CacheHeaderPolicy.IMMUTABLE,
+                stale_while_revalidate=CacheHeaderPolicy.STALE_WHILE_REVALIDATE,
+                stale_if_error=CacheHeaderPolicy.STALE_IF_ERROR,
+            )
+        )
+
+        headers.update(build_observability_headers(elapsed_ms))
+
+        if CacheHeaderPolicy.PRAGMA_NO_CACHE:
+            headers.update(build_pragma_header(True))
+
+        if CacheHeaderPolicy.VARY:
+            headers.update(build_vary_header(CacheHeaderPolicy.VARY))
+
+        if CacheHeaderPolicy.AGE_SECONDS is not None:
+            headers.update(build_age_header(CacheHeaderPolicy.AGE_SECONDS))
+
+        if (
+            CacheHeaderPolicy.CLEAR_CACHE
+            or CacheHeaderPolicy.CLEAR_COOKIES
+            or CacheHeaderPolicy.CLEAR_STORAGE
+        ):
+            headers.update(
+                build_clear_site_data_header(
+                    cache=CacheHeaderPolicy.CLEAR_CACHE,
+                    cookies=CacheHeaderPolicy.CLEAR_COOKIES,
+                    storage=CacheHeaderPolicy.CLEAR_STORAGE,
+                )
+            )
+
+        return headers
+
+    registry.register(before=before, after=after)

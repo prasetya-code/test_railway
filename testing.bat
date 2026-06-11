@@ -1,5 +1,5 @@
 @echo off
-setlocal
+setlocal EnableExtensions
 
 echo ==================================
 echo Running DJLint Reformat...
@@ -42,6 +42,7 @@ echo.
 echo ==================================
 echo Running Pytest...
 echo ==================================
+echo.
 pytest
 
 echo.
