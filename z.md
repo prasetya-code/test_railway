@@ -10,4 +10,8 @@
 # headers
 
 - header param tidak pernah terpanggil, dan harus di panggil lewat regis_utils
-- skema yang di inginkan saya mau semua param header di satukan ke dalam satu file dulu yakni headers.py lalu pada regis_utils tingal memanggil init_headers
+- skema yang di inginkan saya mau semua param header di satukan ke dalam satu file dulu yakni headers.py lalu pada regis_utils tingal memanggil init_headers yang menjalankan semua header param yang sudah di set
+
+# Note
+
+- ** itu untuk unpack (membongkar) isi dictionary dan menggabungkannya ke dalam dictionary baru.
