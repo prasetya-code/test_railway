@@ -300,7 +300,7 @@ def _health_loop():
 def start_redis_health_check(global_redis=True):
     try:
         if not global_redis:
-            print("[REDIS HEALTH] Disabled (GLOBAL_REDIS=False) \n")
+            print("[REDIS HEALTH] Disabled (GLOBAL_REDIS = False) \n")
             return
 
         print("[REDIS HEALTH] Starting background checker...")
