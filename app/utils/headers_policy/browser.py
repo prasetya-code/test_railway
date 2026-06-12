@@ -12,7 +12,7 @@ Handles:
 - Range request support (Accept-Ranges)
 """
 
-from _headers import registry
+from app.utils.headers import registry
 from flask import request
 
 
@@ -20,8 +20,8 @@ from flask import request
 # POLICY LAYER
 # ---------------------------------------------------------------------------
 
-class BrowserHeaderPolicy:
 
+class BrowserHeaderPolicy:
     NOSNIFF = True
     FRAME_POLICY = "DENY"
     XSS_PROTECTION = False
@@ -40,16 +40,13 @@ class BrowserHeaderPolicy:
 # (tetap dipakai tapi tidak lagi orchestration)
 # ---------------------------------------------------------------------------
 
+
 def build_content_type_options_header():
-    return {
-        "X-Content-Type-Options": "nosniff" if BrowserHeaderPolicy.NOSNIFF else ""
-    }
+    return {"X-Content-Type-Options": "nosniff" if BrowserHeaderPolicy.NOSNIFF else ""}
 
 
 def build_frame_options_header():
-    return {
-        "X-Frame-Options": BrowserHeaderPolicy.FRAME_POLICY
-    }
+    return {"X-Frame-Options": BrowserHeaderPolicy.FRAME_POLICY}
 
 
 def build_xss_protection_header():
@@ -62,9 +59,7 @@ def build_xss_protection_header():
 
 def build_dns_prefetch_control_header():
     return {
-        "X-DNS-Prefetch-Control": "on"
-        if BrowserHeaderPolicy.DNS_PREFETCH
-        else "off"
+        "X-DNS-Prefetch-Control": "on" if BrowserHeaderPolicy.DNS_PREFETCH else "off"
     }
 
 
@@ -105,6 +100,7 @@ def build_observability_headers(elapsed_ms):
 # PLUGIN REGISTRATION (NO ORCHESTRATOR)
 # ---------------------------------------------------------------------------
 
+
 def init_browser_headers():
 
     def before():
@@ -129,6 +125,13 @@ def init_browser_headers():
         if BrowserHeaderPolicy.DOWNLOAD_OPTIONS:
             headers.update(build_download_options_header())
 
+        # merge browser_context (X-Content-Type-Options, X-Frame-Options, dll)
+        headers.update(getattr(request, "browser_context", {}))
+
+        headers["__module__"] = "browser"
+
         return headers
+
+    print(f"[DEBUG][browser] using registry id={id(registry)} from module={registry.__class__.__module__}")
 
     registry.register(before=before, after=after)

@@ -10,14 +10,11 @@ Handles:
 - Response observability (X-Response-Time)
 """
 
-
-from _headers import registry
+from app.utils.headers import registry
 from flask import request
-import time
 
 
 class APIHeaderPolicy:
-
     AUTHORIZATION = "Bearer YOUR_STATIC_TOKEN"
     API_KEY = "YOUR_STATIC_API_KEY"
     REQUEST_ID = "STATIC-REQUEST-ID-001"
@@ -36,6 +33,7 @@ class APIHeaderPolicy:
 # BUILDERS
 # ---------------------------------------------------------------------------
 
+
 def build_auth_headers():
     return {
         "Authorization": APIHeaderPolicy.AUTHORIZATION,
@@ -52,7 +50,7 @@ def build_rate_headers(elapsed_ms=None):
         "X-Rate-Limit-Limit": APIHeaderPolicy.RATE_LIMIT_LIMIT,
         "X-Rate-Limit-Remaining": APIHeaderPolicy.RATE_LIMIT_REMAINING,
         "X-Rate-Limit-Reset": APIHeaderPolicy.RATE_LIMIT_RESET,
-        "X-Response-Time": f"{elapsed_ms:.2f}ms" if elapsed_ms else "0ms"
+        "X-Response-Time": f"{elapsed_ms:.2f}ms" if elapsed_ms else "0ms",
     }
 
 
@@ -60,12 +58,18 @@ def build_rate_headers(elapsed_ms=None):
 # REGISTER TO GLOBAL ORCHESTRATOR
 # ---------------------------------------------------------------------------
 
+
 def init_api_headers():
 
     def before():
         request.headers_context.update(build_auth_headers())
 
     def after(elapsed_ms):
-        return build_rate_headers(elapsed_ms)
+        headers = build_rate_headers(elapsed_ms)
+        headers["__module__"] = "api"
+
+        return headers
+    
+    print(f"[DEBUG][api] using registry id={id(registry)} from module={registry.__class__.__module__}")
 
     registry.register(before=before, after=after)

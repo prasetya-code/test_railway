@@ -12,16 +12,15 @@ Handles:
 - Clear-Site-Data (reset client cache/session data)
 """
 
-from _headers import registry
-from datetime import datetime
+from app.utils.headers import registry
 
 
 # ---------------------------------------------------------------------------
 # POLICY LAYER
 # ---------------------------------------------------------------------------
 
-class CacheHeaderPolicy:
 
+class CacheHeaderPolicy:
     NO_STORE = False
     NO_CACHE = False
     MUST_REVALIDATE = False
@@ -48,6 +47,7 @@ class CacheHeaderPolicy:
 # ---------------------------------------------------------------------------
 # BUILDERS (tetap dipakai)
 # ---------------------------------------------------------------------------
+
 
 def build_cache_control_header(
     no_store=False,
@@ -92,9 +92,7 @@ def build_cache_control_header(
     if stale_if_error is not None:
         directives.append(f"stale-if-error={stale_if_error}")
 
-    return {
-        "Cache-Control": ", ".join(directives) if directives else "no-store"
-    }
+    return {"Cache-Control": ", ".join(directives) if directives else "no-store"}
 
 
 def build_pragma_header(no_cache=True):
@@ -105,9 +103,7 @@ def build_expires_header(expires_at=None):
     if expires_at is None:
         return {"Expires": "0"}
 
-    return {
-        "Expires": expires_at.strftime("%a, %d %b %Y %H:%M:%S GMT")
-    }
+    return {"Expires": expires_at.strftime("%a, %d %b %Y %H:%M:%S GMT")}
 
 
 def build_vary_header(headers):
@@ -154,6 +150,7 @@ def build_observability_headers(elapsed_ms):
 # ---------------------------------------------------------------------------
 # PLUGIN INITIALIZER (NO ORCHESTRATOR)
 # ---------------------------------------------------------------------------
+
 
 def init_cache_headers():
 
@@ -203,6 +200,10 @@ def init_cache_headers():
                 )
             )
 
+        headers["__module__"] = "cache"
+
         return headers
+    
+    print(f"[DEBUG][cache] using registry id={id(registry)} from module={registry.__class__.__module__}")
 
     registry.register(before=before, after=after)
