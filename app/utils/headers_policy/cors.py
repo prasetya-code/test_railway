@@ -11,15 +11,15 @@ Handles:
 - Origin validation
 """
 
-from _headers import registry
+from app.utils.headers import registry
 
 
 # ---------------------------------------------------------------------------
 # POLICY LAYER
 # ---------------------------------------------------------------------------
 
-class CORSHeaderPolicy:
 
+class CORSHeaderPolicy:
     ALLOW_ALL_ORIGINS = False
     ALLOWED_ORIGINS = []
 
@@ -53,6 +53,7 @@ class CORSHeaderPolicy:
 # BUILDERS
 # ---------------------------------------------------------------------------
 
+
 def build_allow_origin_header(allowed_origins, request_origin, allow_all):
     if allow_all:
         return {"Access-Control-Allow-Origin": "*"}
@@ -76,66 +77,52 @@ def build_allow_methods_header(methods):
     if not methods:
         return {}
 
-    return {
-        "Access-Control-Allow-Methods": ", ".join(m.upper() for m in methods)
-    }
+    return {"Access-Control-Allow-Methods": ", ".join(m.upper() for m in methods)}
 
 
 def build_allow_headers_header(headers):
     if not headers:
         return {}
 
-    return {
-        "Access-Control-Allow-Headers": ", ".join(headers)
-    }
+    return {"Access-Control-Allow-Headers": ", ".join(headers)}
 
 
 def build_expose_headers_header(headers):
     if not headers:
         return {}
 
-    return {
-        "Access-Control-Expose-Headers": ", ".join(headers)
-    }
+    return {"Access-Control-Expose-Headers": ", ".join(headers)}
 
 
 def build_allow_credentials_header(allow):
-    return {
-        "Access-Control-Allow-Credentials": "true" if allow else "false"
-    }
+    return {"Access-Control-Allow-Credentials": "true" if allow else "false"}
 
 
 def build_max_age_header(max_age):
-    return {
-        "Access-Control-Max-Age": str(max_age)
-    }
+    return {"Access-Control-Max-Age": str(max_age)}
 
 
 def build_observability_headers(elapsed_ms):
-    return {
-        "X-Response-Time": f"{elapsed_ms:.2f}ms"
-    }
+    return {"X-Response-Time": f"{elapsed_ms:.2f}ms"}
 
 
 # ---------------------------------------------------------------------------
 # PLUGIN INITIALIZER (NO ORCHESTRATOR)
 # ---------------------------------------------------------------------------
 
+
 def init_cors_headers():
 
     def before():
-        return {
-            "cors_origin": None
-        }
+        return {"cors_origin": None}
 
-    def after(elapsed_ms, request):
+    def after(request, elapsed_ms):
 
         origin = request.headers.get("Origin")
 
         headers = {}
 
         if request.method == "OPTIONS":
-
             headers.update(
                 build_allow_origin_header(
                     CORSHeaderPolicy.ALLOWED_ORIGINS,
@@ -144,32 +131,19 @@ def init_cors_headers():
                 )
             )
 
+            headers.update(build_allow_methods_header(CORSHeaderPolicy.ALLOWED_METHODS))
+
             headers.update(
-                build_allow_methods_header(
-                    CORSHeaderPolicy.ALLOWED_METHODS
-                )
+                build_allow_headers_header(CORSHeaderPolicy.ALLOWED_REQUEST_HEADERS)
             )
 
             headers.update(
-                build_allow_headers_header(
-                    CORSHeaderPolicy.ALLOWED_REQUEST_HEADERS
-                )
+                build_allow_credentials_header(CORSHeaderPolicy.ALLOW_CREDENTIALS)
             )
 
-            headers.update(
-                build_allow_credentials_header(
-                    CORSHeaderPolicy.ALLOW_CREDENTIALS
-                )
-            )
-
-            headers.update(
-                build_max_age_header(
-                    CORSHeaderPolicy.PREFLIGHT_MAX_AGE
-                )
-            )
+            headers.update(build_max_age_header(CORSHeaderPolicy.PREFLIGHT_MAX_AGE))
 
         else:
-
             headers.update(
                 build_allow_origin_header(
                     CORSHeaderPolicy.ALLOWED_ORIGINS,
@@ -178,32 +152,26 @@ def init_cors_headers():
                 )
             )
 
+            headers.update(build_allow_methods_header(CORSHeaderPolicy.ALLOWED_METHODS))
+
             headers.update(
-                build_allow_methods_header(
-                    CORSHeaderPolicy.ALLOWED_METHODS
-                )
+                build_allow_headers_header(CORSHeaderPolicy.ALLOWED_REQUEST_HEADERS)
             )
 
             headers.update(
-                build_allow_headers_header(
-                    CORSHeaderPolicy.ALLOWED_REQUEST_HEADERS
-                )
+                build_expose_headers_header(CORSHeaderPolicy.EXPOSED_HEADERS)
             )
 
             headers.update(
-                build_expose_headers_header(
-                    CORSHeaderPolicy.EXPOSED_HEADERS
-                )
-            )
-
-            headers.update(
-                build_allow_credentials_header(
-                    CORSHeaderPolicy.ALLOW_CREDENTIALS
-                )
+                build_allow_credentials_header(CORSHeaderPolicy.ALLOW_CREDENTIALS)
             )
 
         headers.update(build_observability_headers(elapsed_ms))
 
+        headers["__module__"] = "cors"
+
         return headers
+    
+    print(f"[DEBUG][cors] using registry id={id(registry)} from module={registry.__class__.__module__}")
 
     registry.register(before=before, after=after)

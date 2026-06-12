@@ -11,15 +11,15 @@ Handles:
 - Trusted Types
 """
 
-from _headers import registry
+from app.utils.headers import registry
 
 
 # ---------------------------------------------------------------------------
 # POLICY LAYER
 # ---------------------------------------------------------------------------
 
-class CSPHeaderPolicy:
 
+class CSPHeaderPolicy:
     REPORT_ONLY = False
 
     DEFAULT_SRC = ["'self'"]
@@ -51,6 +51,7 @@ class CSPHeaderPolicy:
 # BUILDERS
 # ---------------------------------------------------------------------------
 
+
 def build_directives(mapping):
     directives = {}
 
@@ -62,59 +63,65 @@ def build_directives(mapping):
 
 
 def build_fetch_directives():
-    return build_directives({
-        "default-src": CSPHeaderPolicy.DEFAULT_SRC,
-        "script-src": CSPHeaderPolicy.SCRIPT_SRC,
-        "style-src": CSPHeaderPolicy.STYLE_SRC,
-        "img-src": CSPHeaderPolicy.IMG_SRC,
-        "font-src": CSPHeaderPolicy.FONT_SRC,
-        "connect-src": CSPHeaderPolicy.CONNECT_SRC,
-        "media-src": CSPHeaderPolicy.MEDIA_SRC,
-        "object-src": CSPHeaderPolicy.OBJECT_SRC,
-        "frame-src": CSPHeaderPolicy.FRAME_SRC,
-        "worker-src": CSPHeaderPolicy.WORKER_SRC,
-    })
+    return build_directives(
+        {
+            "default-src": CSPHeaderPolicy.DEFAULT_SRC,
+            "script-src": CSPHeaderPolicy.SCRIPT_SRC,
+            "style-src": CSPHeaderPolicy.STYLE_SRC,
+            "img-src": CSPHeaderPolicy.IMG_SRC,
+            "font-src": CSPHeaderPolicy.FONT_SRC,
+            "connect-src": CSPHeaderPolicy.CONNECT_SRC,
+            "media-src": CSPHeaderPolicy.MEDIA_SRC,
+            "object-src": CSPHeaderPolicy.OBJECT_SRC,
+            "frame-src": CSPHeaderPolicy.FRAME_SRC,
+            "worker-src": CSPHeaderPolicy.WORKER_SRC,
+        }
+    )
 
 
 def build_navigation_directives():
-    return build_directives({
-        "form-action": CSPHeaderPolicy.FORM_ACTION,
-        "frame-ancestors": CSPHeaderPolicy.FRAME_ANCESTORS,
-    })
+    return build_directives(
+        {
+            "form-action": CSPHeaderPolicy.FORM_ACTION,
+            "frame-ancestors": CSPHeaderPolicy.FRAME_ANCESTORS,
+        }
+    )
 
 
 def build_document_directives():
-    return build_directives({
-        "base-uri": CSPHeaderPolicy.BASE_URI,
-        "sandbox": CSPHeaderPolicy.SANDBOX,
-    })
+    return build_directives(
+        {
+            "base-uri": CSPHeaderPolicy.BASE_URI,
+            "sandbox": CSPHeaderPolicy.SANDBOX,
+        }
+    )
 
 
 def build_reporting_directives():
-    return build_directives({
-        "report-uri": CSPHeaderPolicy.REPORT_URI,
-        "report-to": CSPHeaderPolicy.REPORT_TO,
-    })
+    return build_directives(
+        {
+            "report-uri": CSPHeaderPolicy.REPORT_URI,
+            "report-to": CSPHeaderPolicy.REPORT_TO,
+        }
+    )
 
 
 def build_trusted_types_directive():
     if not CSPHeaderPolicy.TRUSTED_TYPES:
         return {}
 
-    return {
-        "trusted-types": " ".join(CSPHeaderPolicy.TRUSTED_TYPES)
-    }
+    return {"trusted-types": " ".join(CSPHeaderPolicy.TRUSTED_TYPES)}
 
 
 # ---------------------------------------------------------------------------
 # ASSEMBLER
 # ---------------------------------------------------------------------------
 
+
 def assemble_csp_policy(directives):
     parts = []
 
     for directive, value in directives.items():
-
         if isinstance(value, list):
             parts.append(f"{directive} {' '.join(value)}")
 
@@ -138,45 +145,49 @@ def build_csp_header(policy):
 # PRESETS
 # ---------------------------------------------------------------------------
 
+
 def preset_strict():
-    return assemble_csp_policy({
-        "default-src": ["'self'"],
-        "script-src": ["'strict-dynamic'", "'self'"],
-        "style-src": ["'self'", "'unsafe-inline'"],
-        "img-src": ["'self'", "data:", "https:"],
-        "font-src": ["'self'"],
-        "connect-src": ["'self'"],
-        "media-src": ["'none'"],
-        "object-src": ["'none'"],
-        "frame-src": ["'none'"],
-        "worker-src": ["'self'"],
-        "form-action": ["'self'"],
-        "frame-ancestors": ["'none'"],
-        "base-uri": ["'self'"],
-    })
+    return assemble_csp_policy(
+        {
+            "default-src": ["'self'"],
+            "script-src": ["'strict-dynamic'", "'self'"],
+            "style-src": ["'self'", "'unsafe-inline'"],
+            "img-src": ["'self'", "data:", "https:"],
+            "font-src": ["'self'"],
+            "connect-src": ["'self'"],
+            "media-src": ["'none'"],
+            "object-src": ["'none'"],
+            "frame-src": ["'none'"],
+            "worker-src": ["'self'"],
+            "form-action": ["'self'"],
+            "frame-ancestors": ["'none'"],
+            "base-uri": ["'self'"],
+        }
+    )
 
 
 def preset_api():
-    return assemble_csp_policy({
-        "default-src": ["'none'"],
-        "form-action": ["'none'"],
-        "frame-ancestors": ["'none'"],
-        "base-uri": ["'none'"],
-    })
+    return assemble_csp_policy(
+        {
+            "default-src": ["'none'"],
+            "form-action": ["'none'"],
+            "frame-ancestors": ["'none'"],
+            "base-uri": ["'none'"],
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
 # PLUGIN INITIALIZER (NO ORCHESTRATOR)
 # ---------------------------------------------------------------------------
 
+
 def init_csp_headers():
 
     def before():
-        return {
-            "csp_context": {}
-        }
+        return {"csp_context": {}}
 
-    def after(elapsed_ms, request):
+    def after(request, elapsed_ms):
 
         if CSPHeaderPolicy.PRESET == "strict":
             policy = preset_strict()
@@ -197,10 +208,12 @@ def init_csp_headers():
 
         headers = build_csp_header(policy)
 
-        headers.update({
-            "X-Response-Time": f"{elapsed_ms:.2f}ms"
-        })
+        headers.update({"X-Response-Time": f"{elapsed_ms:.2f}ms"})
+
+        headers["__module__"] = "csp"
 
         return headers
+    
+    print(f"[DEBUG][csp] using registry id={id(registry)} from module={registry.__class__.__module__}")
 
     registry.register(before=before, after=after)

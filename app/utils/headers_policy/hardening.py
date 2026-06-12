@@ -14,9 +14,7 @@ Notes:
 - CSP handled separately
 """
 
-
-from flask import request
-import time
+from app.utils.headers import registry
 
 
 # ---------------------------------------------------------------------------
@@ -24,8 +22,8 @@ import time
 # Central configuration for hardening behavior
 # ---------------------------------------------------------------------------
 
-class HardeningHeaderPolicy:
 
+class HardeningHeaderPolicy:
     # Referrer policy
     REFERRER_POLICY = "strict-origin-when-cross-origin"
 
@@ -51,10 +49,9 @@ class HardeningHeaderPolicy:
 # Each function handles a single hardening directive
 # ---------------------------------------------------------------------------
 
+
 def build_referrer_policy_header(policy):
-    return {
-        "Referrer-Policy": policy
-    }
+    return {"Referrer-Policy": policy}
 
 
 def build_permissions_policy_header(preset, extra=None):
@@ -63,7 +60,6 @@ def build_permissions_policy_header(preset, extra=None):
     directives = []
 
     for feature, sources in feature_map.items():
-
         if sources is None:
             continue
 
@@ -71,14 +67,11 @@ def build_permissions_policy_header(preset, extra=None):
             directives.append(f"{feature}=()")
         else:
             formatted = " ".join(
-                f'"{s}"' if s not in ("self", "*") else s
-                for s in sources
+                f'"{s}"' if s not in ("self", "*") else s for s in sources
             )
             directives.append(f"{feature}=({formatted})")
 
-    return {
-        "Permissions-Policy": ", ".join(directives)
-    } if directives else {}
+    return {"Permissions-Policy": ", ".join(directives)} if directives else {}
 
 
 def build_server_header(mask, value):
@@ -102,21 +95,18 @@ def build_expect_ct_header(max_age, enforce, report_uri):
     if report_uri:
         parts.append(f'report-uri="{report_uri}"')
 
-    return {
-        "Expect-CT": ", ".join(parts)
-    }
+    return {"Expect-CT": ", ".join(parts)}
 
 
 def build_observability_headers(elapsed_ms):
-    return {
-        "X-Response-Time": f"{elapsed_ms:.2f}ms"
-    }
+    return {"X-Response-Time": f"{elapsed_ms:.2f}ms"}
 
 
 # ---------------------------------------------------------------------------
 # PRESETS
 # Common hardening configurations
 # ---------------------------------------------------------------------------
+
 
 def preset_deny_all_permissions():
     return {
@@ -159,39 +149,23 @@ def preset_self_permissions():
 
 
 # ---------------------------------------------------------------------------
-# ORCHESTRATOR
-# Controls request lifecycle hooks (before/after request)
+# PLUGIN INITIALIZER (NO ORCHESTRATOR)
+# Registers into the single global HeaderOrchestrator via registry
 # ---------------------------------------------------------------------------
 
-class HardeningHeaderOrchestrator:
 
-    def __init__(self, app):
-        self.app = app
-        self.start_time = None
+def init_hardening_headers():
 
-    def before_request(self):
-        """
-        Called before request processing.
-        """
+    def before():
+        # reserved for future hardening context
+        pass
 
-        self.start_time = time.perf_counter()
-
-        request.hardening_context = {}
-
-    def after_request(self, response):
-        """
-        Called after response generation.
-        """
-
-        elapsed_ms = (time.perf_counter() - self.start_time) * 1000
-
+    def after(elapsed_ms):
         headers = {}
 
         # Referrer Policy
         headers.update(
-            build_referrer_policy_header(
-                HardeningHeaderPolicy.REFERRER_POLICY
-            )
+            build_referrer_policy_header(HardeningHeaderPolicy.REFERRER_POLICY)
         )
 
         # Permissions Policy
@@ -236,32 +210,12 @@ class HardeningHeaderOrchestrator:
         )
 
         # Observability
-        headers.update(
-            build_observability_headers(elapsed_ms)
-        )
+        headers.update(build_observability_headers(elapsed_ms))
 
-        for key, value in headers.items():
-            response.headers[key] = value
+        headers["__module__"] = "hardening"
 
-        return response
+        return headers
+    
+    print(f"[DEBUG][hardening] using registry id={id(registry)} from module={registry.__class__.__module__}")
 
-
-# ---------------------------------------------------------------------------
-# REGISTRATION ENTRY POINT
-# Used in application bootstrap (register_utils)
-# ---------------------------------------------------------------------------
-
-def register_hardening_headers(app):
-    """
-    Initialize browser hardening middleware system.
-
-    Usage:
-        register_hardening_headers(app)
-    """
-
-    orchestrator = HardeningHeaderOrchestrator(app)
-
-    app.before_request(orchestrator.before_request)
-    app.after_request(orchestrator.after_request)
-
-    return orchestrator
+    registry.register(before=before, after=after)

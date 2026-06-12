@@ -12,15 +12,15 @@ Purpose:
 - Improve process isolation and memory safety
 """
 
-from _headers import registry
+from app.utils.headers import registry
 
 
 # ---------------------------------------------------------------------------
 # POLICY LAYER
 # ---------------------------------------------------------------------------
 
-class IsolationHeaderPolicy:
 
+class IsolationHeaderPolicy:
     COOP_POLICY = "same-origin"
     COEP_POLICY = "require-corp"
     CORP_POLICY = "same-origin"
@@ -34,6 +34,7 @@ class IsolationHeaderPolicy:
 # ---------------------------------------------------------------------------
 # HEADER BUILDERS
 # ---------------------------------------------------------------------------
+
 
 def build_coop_header(policy, report_to=None):
     headers = {"Cross-Origin-Opener-Policy": policy}
@@ -73,6 +74,7 @@ def build_observability_headers(elapsed_ms):
 # PRESETS
 # ---------------------------------------------------------------------------
 
+
 def preset_full_isolation():
     return {
         "coop": "same-origin",
@@ -103,6 +105,7 @@ def preset_no_isolation():
 # ---------------------------------------------------------------------------
 # PLUGIN INITIALIZER (NO ORCHESTRATOR)
 # ---------------------------------------------------------------------------
+
 
 def init_isolation_headers():
 
@@ -155,20 +158,18 @@ def init_isolation_headers():
         )
 
         # CORP
-        headers.update(
-            build_corp_header(config["corp"])
-        )
+        headers.update(build_corp_header(config["corp"]))
 
         # Origin Agent Cluster
-        headers.update(
-            build_origin_agent_cluster_header(config["oac"])
-        )
+        headers.update(build_origin_agent_cluster_header(config["oac"]))
 
         # Observability
-        headers.update(
-            build_observability_headers(elapsed_ms)
-        )
+        headers.update(build_observability_headers(elapsed_ms))
+
+        headers["__module__"] = "isolation"
 
         return headers
+    
+    print(f"[DEBUG][isolation] using registry id={id(registry)} from module={registry.__class__.__module__}")
 
     registry.register(before=before, after=after)
