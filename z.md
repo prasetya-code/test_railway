@@ -38,4 +38,5 @@ Flask-Compress
 Flask-Caching (opsional)
 
 ✔ Auth
-Flask-Login atau Flask-JWT-Extended
+session -> bawaan flask (session) -> untuk route yang memiliki render
+token -> PyJWT -> untuk route yang berfokus pada api (no render)
