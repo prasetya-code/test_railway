@@ -11,7 +11,7 @@ Handles:
 - Trusted Types
 """
 
-from app.utils.headers import registry
+from app.middleware.headers import registry
 
 
 # ---------------------------------------------------------------------------
@@ -213,7 +213,9 @@ def init_csp_headers():
         headers["__module__"] = "csp"
 
         return headers
-    
-    print(f"[DEBUG][csp] using registry id={id(registry)} from module={registry.__class__.__module__}")
+
+    print(
+        f"[DEBUG][csp] using registry id={id(registry)} from module={registry.__class__.__module__}"
+    )
 
     registry.register(before=before, after=after)

@@ -12,7 +12,7 @@ Purpose:
 - Improve process isolation and memory safety
 """
 
-from app.utils.headers import registry
+from app.middleware.headers import registry
 
 
 # ---------------------------------------------------------------------------
@@ -169,7 +169,9 @@ def init_isolation_headers():
         headers["__module__"] = "isolation"
 
         return headers
-    
-    print(f"[DEBUG][isolation] using registry id={id(registry)} from module={registry.__class__.__module__}")
+
+    print(
+        f"[DEBUG][isolation] using registry id={id(registry)} from module={registry.__class__.__module__}"
+    )
 
     registry.register(before=before, after=after)

@@ -65,8 +65,10 @@ class HeaderOrchestrator:
 
         request.headers_context = getattr(request, "headers_context", {})
 
-        print(f"\n[Orchestrator][before]: "
-              f"path = {request.path}, method = {request.method}, total hooks = {len(registry.before_request_hooks)} \n")
+        print(
+            f"\n[Orchestrator][before]: "
+            f"path = {request.path}, method = {request.method}, total hooks = {len(registry.before_request_hooks)} \n"
+        )
 
         for hook in registry.before_request_hooks:
             hook_name = f"{hook.__module__}.{hook.__qualname__}"
@@ -76,17 +78,23 @@ class HeaderOrchestrator:
                 except TypeError:
                     result = hook()
 
-                print(f"[DEBUG][before_request] path = {request.path}, hook = {hook_name}, result = {result}")
+                print(
+                    f"[DEBUG][before_request] path = {request.path}, hook = {hook_name}, result = {result}"
+                )
 
             except Exception:
-                print(f"[DEBUG][before_request] path = {request.path}, hook = {hook_name}, ERROR:")
+                print(
+                    f"[DEBUG][before_request] path = {request.path}, hook = {hook_name}, ERROR:"
+                )
                 traceback.print_exc()
 
     def after_request(self, response):
         elapsed_ms = (time.perf_counter() - self.start_time) * 1000
 
-        print(f"\n[Orchestrator][after]: "
-              f"path = {request.path}, method = {request.method}, elapsed_ms = {elapsed_ms:.2f}, total hooks = {len(registry.after_request_hooks)} \n")
+        print(
+            f"\n[Orchestrator][after]: "
+            f"path = {request.path}, method = {request.method}, elapsed_ms = {elapsed_ms:.2f}, total hooks = {len(registry.after_request_hooks)} \n"
+        )
 
         # final resolved headers (priority-aware)
         resolved_headers = {}
@@ -105,10 +113,14 @@ class HeaderOrchestrator:
                     except TypeError:
                         result = hook(elapsed_ms)
 
-                print(f"[DEBUG][resolved headers] path = {request.path}, hook = {hook_name}")
+                print(
+                    f"[DEBUG][resolved headers] path = {request.path}, hook = {hook_name}"
+                )
 
                 if not result or not isinstance(result, dict):
-                    print(f"SKIPPED: path = {request.path} hook = {hook_name} -> (empty/non-dict)")
+                    print(
+                        f"SKIPPED: path = {request.path} hook = {hook_name} -> (empty/non-dict)"
+                    )
                     continue
 
                 # detect module name if provided
@@ -147,7 +159,9 @@ class HeaderOrchestrator:
                         )
 
             except Exception:
-                print(f"[DEBUG][after_request] path={request.path}, hook={hook_name}, ERROR:")
+                print(
+                    f"[DEBUG][after_request] path={request.path}, hook={hook_name}, ERROR:"
+                )
                 traceback.print_exc()
 
         # print(f"\n[FINAL] path={request.path}  resolved_headers={resolved_headers}")
@@ -168,18 +182,19 @@ class HeaderOrchestrator:
 # ENTRY POINT
 # =============================================================================
 
+
 def init_headers(app):
     print("[HEADERS] initializing header orchestrator \n")
 
     # import di sini (lazy import) untuk hindari circular import,
     # karena modul-modul ini sendiri mengimport `registry` dari headers.py
-    from .headers_policy.api import init_api_headers
-    from .headers_policy.browser import init_browser_headers
-    from .headers_policy.cache import init_cache_headers
-    from .headers_policy.cors import init_cors_headers
-    from .headers_policy.csp import init_csp_headers
-    from .headers_policy.hardening import init_hardening_headers
-    from .headers_policy.isolation import init_isolation_headers
+    from ..utils.headers_policy.api_headers import init_api_headers
+    from ..utils.headers_policy.browser import init_browser_headers
+    from ..utils.headers_policy.cache import init_cache_headers
+    from ..utils.headers_policy.cors import init_cors_headers
+    from ..utils.headers_policy.csp import init_csp_headers
+    from ..utils.headers_policy.hardening import init_hardening_headers
+    from ..utils.headers_policy.isolation import init_isolation_headers
 
     # daftarkan semua header policy ke registry
     init_csp_headers()
@@ -195,7 +210,8 @@ def init_headers(app):
     app.before_request(orchestrator.before_request)
     app.after_request(orchestrator.after_request)
 
-    print(f"\n[HEADERS] initialize hooks: "
+    print(
+        f"\n[HEADERS] initialize hooks: "
         f"before-hooks = {len(registry.before_request_hooks)}, "
         f"after-hooks = {len(registry.after_request_hooks)} \n"
     )

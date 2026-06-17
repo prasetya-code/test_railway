@@ -14,7 +14,7 @@ Notes:
 - CSP handled separately
 """
 
-from app.utils.headers import registry
+from app.middleware.headers import registry
 
 
 # ---------------------------------------------------------------------------
@@ -215,7 +215,9 @@ def init_hardening_headers():
         headers["__module__"] = "hardening"
 
         return headers
-    
-    print(f"[DEBUG][hardening] using registry id={id(registry)} from module={registry.__class__.__module__}")
+
+    print(
+        f"[DEBUG][hardening] using registry id={id(registry)} from module={registry.__class__.__module__}"
+    )
 
     registry.register(before=before, after=after)
