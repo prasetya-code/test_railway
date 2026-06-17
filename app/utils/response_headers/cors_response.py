@@ -176,7 +176,7 @@ def build_cors_headers(request_obj):
     """
 
     try:
-        origin = request_obj.headers.get("Origin")
+        # origin = request_obj.headers.get("Origin")
 
         headers = {}
 
