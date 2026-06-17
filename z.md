@@ -15,3 +15,27 @@
 # Note
 
 - ** itu untuk unpack (membongkar) isi dictionary dan menggabungkannya ke dalam dictionary baru.
+
+
+
+# CORE
+
+🧠 Struktur minimal portfolio yang ideal
+
+Kalau diringkas, stack “clean portfolio Flask”:
+
+✔ Core
+Flask
+Flask-SQLAlchemy
+
+✔ Security
+Flask-Talisman
+Flask-Limiter
+Flask-CORS (jika API)
+
+✔ Performance
+Flask-Compress
+Flask-Caching (opsional)
+
+✔ Auth
+Flask-Login atau Flask-JWT-Extended
