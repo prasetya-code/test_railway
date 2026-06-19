@@ -19,5 +19,8 @@ logs
 .coverage
 coverage.xml
 
+# Temporary
+tmp
+
 # VSCode
 .vscode/

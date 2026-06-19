@@ -1,6 +1,7 @@
 from flask_caching import Cache
 from .redis_client import is_cache_redis_available, REDIS_CACHE_URL
 
+from pathlib import Path
 import os
 import traceback
 
@@ -9,13 +10,15 @@ fl_cache = Cache()
 # =========================
 # CACHE DIRECTORY
 # =========================
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-CACHE_PATH = os.path.join(BASE_DIR, "tmp", "flask_cache")
+BASE_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = BASE_DIR.parent.parent
+
+CACHE_PATH = PROJECT_ROOT / "tmp" / "flask_cache"
 
 
 def ensure_cache_dir():
     try:
-        os.makedirs(CACHE_PATH, exist_ok=True)
+        CACHE_PATH.mkdir(parents=True, exist_ok=True)
         print(f"[CACHE] Directory ready: {CACHE_PATH}")
 
     except Exception as e:
@@ -71,7 +74,7 @@ class CacheConfig:
     # =========================
     # FILESYSTEM CONFIG
     # =========================
-    CACHE_DIR = CACHE_PATH
+    CACHE_DIR = str(CACHE_PATH)
 
     # Disable warning untuk null cache
     CACHE_NO_NULL_WARNING = True
@@ -121,10 +124,12 @@ def init_cache(app):
                 print("[CACHE WARNING] Redis not available → fallback to SimpleCache")
                 cache_type = "SimpleCache"
 
+
         # =========================
         # APPLY CACHE TYPE
         # =========================
         app.config["CACHE_TYPE"] = cache_type
+
 
         # =========================
         # FILESYSTEM HANDLING
@@ -133,12 +138,15 @@ def init_cache(app):
             ensure_cache_dir()
             print("[CACHE] Using FileSystemCache")
 
+
         # =========================
         # INIT CACHE
         # =========================
         fl_cache.init_app(app)
 
-        print(f"[CACHE] Initialized with type: {cache_type} \n")
+
+        print(f"[CACHE] Initialized with type: {cache_type}")
+        print(f"[CACHE] Cache directory: {CACHE_PATH}\n")
 
     except Exception as e:
         print(f"[CACHE ERROR] Failed to initialize cache: {e}")
