@@ -50,5 +50,5 @@ def init_compress(app):
     except Exception as e:
         print(f"[ERROR] init_compress gagal: {e}")
         traceback.print_exc()
-        
+
         raise

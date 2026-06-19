@@ -124,12 +124,10 @@ def init_cache(app):
                 print("[CACHE WARNING] Redis not available → fallback to SimpleCache")
                 cache_type = "SimpleCache"
 
-
         # =========================
         # APPLY CACHE TYPE
         # =========================
         app.config["CACHE_TYPE"] = cache_type
-
 
         # =========================
         # FILESYSTEM HANDLING
@@ -138,12 +136,10 @@ def init_cache(app):
             ensure_cache_dir()
             print("[CACHE] Using FileSystemCache")
 
-
         # =========================
         # INIT CACHE
         # =========================
         fl_cache.init_app(app)
-
 
         print(f"[CACHE] Initialized with type: {cache_type}")
         print(f"[CACHE] Cache directory: {CACHE_PATH}\n")
