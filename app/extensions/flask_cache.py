@@ -1,3 +1,7 @@
+""" Tidak perlu ada middleware karena sudah di handle dengan @fl_cache.cached(
+    timeout=60, response_filter=lambda r: getattr(r, "status_code", 200) == 200
+) yang ada pada route """
+
 from flask_caching import Cache
 from .redis_client import is_cache_redis_available, REDIS_CACHE_URL
 
@@ -81,6 +85,30 @@ class CacheConfig:
 
 
 # =========================
+# CACHE INITIALIZER HELPER
+# =========================
+def _init_cache_backend(app, cache_type):
+    """
+    Membuat instance Cache baru untuk setiap percobaan init.
+    Lebih aman dibanding memanggil init_app() berkali-kali
+    pada instance Cache yang sama.
+    """
+    global fl_cache
+
+    app.config["CACHE_TYPE"] = cache_type
+
+    if cache_type == "FileSystemCache":
+        ensure_cache_dir()
+
+    cache_instance = Cache()
+    cache_instance.init_app(app)
+
+    fl_cache = cache_instance
+
+    return cache_instance
+
+
+# =========================
 # INIT CACHE
 # =========================
 def init_cache(app):
@@ -93,15 +121,16 @@ def init_cache(app):
         # =========================
         # ENV CONTROL (OPTIONAL)
         # =========================
-        USE_REDIS_CACHE = os.getenv("USE_REDIS_CACHE", "true").lower() == "true"
+        USE_REDIS_CACHE = (
+            os.getenv("USE_REDIS_CACHE", "true").lower() == "true"
+        )
 
         # =========================
         # GLOBAL CONTROL (MASTER SWITCH)
         # =========================
         global_redis = app.config.get("GLOBAL_REDIS", True)
 
-        # print(f"[CACHE] GLOBAL_REDIS = {global_redis}")
-        print(f"[CACHE] ENV USE_REDIS_CACHE = {USE_REDIS_CACHE}")
+        print(f"[CACHE] ENV USE_REDIS_CACHE status: {USE_REDIS_CACHE}")
 
         # =========================
         # DECISION FLOW
@@ -120,29 +149,30 @@ def init_cache(app):
             if is_cache_redis_available():
                 print("[CACHE] Redis available → using RedisCache")
                 cache_type = "RedisCache"
+                
             else:
-                print("[CACHE WARNING] Redis not available → fallback to SimpleCache")
+                print(
+                    "[CACHE WARNING] Redis not available → fallback to SimpleCache"
+                )
                 cache_type = "SimpleCache"
 
         # =========================
         # APPLY CACHE TYPE
         # =========================
-        app.config["CACHE_TYPE"] = cache_type
+        _init_cache_backend(app, cache_type)
 
         # =========================
         # FILESYSTEM HANDLING
         # =========================
         if cache_type == "FileSystemCache":
-            ensure_cache_dir()
             print("[CACHE] Using FileSystemCache")
 
-        # =========================
-        # INIT CACHE
-        # =========================
-        fl_cache.init_app(app)
-
         print(f"[CACHE] Initialized with type: {cache_type}")
-        print(f"[CACHE] Cache directory: {CACHE_PATH}\n")
+
+        if cache_type == "FileSystemCache":
+            print(f"[CACHE] Cache directory: {CACHE_PATH}")
+
+        print()
 
     except Exception as e:
         print(f"[CACHE ERROR] Failed to initialize cache: {e}")
@@ -152,10 +182,32 @@ def init_cache(app):
         # FALLBACK
         # =========================
         try:
-            print("[CACHE] Falling back to SimpleCache (manual fallback)")
-            app.config["CACHE_TYPE"] = "SimpleCache"
-            fl_cache.init_app(app)
+            print("[CACHE] Falling back to SimpleCache")
 
-        except Exception as fallback_error:
-            print(f"[CACHE CRITICAL] Fallback failed: {fallback_error}")
+            _init_cache_backend(app, "SimpleCache")
+
+            print("[CACHE] SimpleCache initialized successfully\n")
+
+        except Exception as simple_error:
+            print(
+                f"[CACHE ERROR] SimpleCache fallback failed: {simple_error}"
+            )
             traceback.print_exc()
+
+            try:
+                print("[CACHE] Falling back to FileSystemCache")
+
+                _init_cache_backend(app, "FileSystemCache")
+
+                print(
+                    f"[CACHE] FileSystemCache initialized successfully "
+                    f"at {CACHE_PATH}\n"
+                )
+
+            except Exception as filesystem_error:
+                print(
+                    "[CACHE CRITICAL] FileSystemCache fallback failed: "
+                    f"{filesystem_error}"
+                )
+                traceback.print_exc()
+                raise

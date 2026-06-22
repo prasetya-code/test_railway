@@ -1,6 +1,8 @@
-import traceback
+# Tidak perlu ada middleware karena sudah di handle otomatis oleh fl_compress dimana hanya tinggal di inisalisasi saja
 
 from flask_compress import Compress
+import traceback
+
 
 fl_compress = Compress()
 

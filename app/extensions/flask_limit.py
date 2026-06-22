@@ -77,14 +77,13 @@ def init_limiter(app):
         # =========================
         global_redis = app.config.get("GLOBAL_REDIS", True)
 
-        # print(f"[LIMITER] GLOBAL_REDIS = {global_redis}")
         print(f"[LIMITER] ENV USE_REDIS_LIMITER = {USE_REDIS_LIMITER}")
 
         # =========================
         # STORAGE DECISION
         # =========================
         # PRIORITY:
-        # 1. GLOBAL_REDIS
+        # 1. Global Redis
         # 2. ENV (USE_REDIS_LIMITER)
         # 3. Redis availability
         #

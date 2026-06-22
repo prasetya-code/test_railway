@@ -322,6 +322,7 @@ def is_cache_redis_available():
     except Exception as e:
         print(f"[REDIS CACHE CHECK ERROR] {e}")
         traceback.print_exc()
+
         return False
 
 
@@ -332,4 +333,5 @@ def is_limit_redis_available():
     except Exception as e:
         print(f"[REDIS LIMIT CHECK ERROR] {e}")
         traceback.print_exc()
+        
         return False
