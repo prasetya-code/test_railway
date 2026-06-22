@@ -19,7 +19,7 @@ def register_extension(app):
         # Ini akan dipakai oleh cache & limiter
         app.config["GLOBAL_REDIS"] = GLOBAL_REDIS
 
-        print(f"[GLOBAL] GLOBAL_REDIS = {GLOBAL_REDIS}\n")
+        print(f"[GLOBAL CONFIG] GLOBAL_REDIS Status: {GLOBAL_REDIS}\n")
 
         # =========================
         # INIT EXTENSIONS
@@ -31,7 +31,7 @@ def register_extension(app):
         # =========================
         # 🔥 START REDIS HEALTH CHECK
         # =========================
-        # Hanya jalan jika Redis diaktifkan
+        # Hanya jalan jika Redis diaktifkan (True)
         start_redis_health_check(app.config.get("GLOBAL_REDIS", True))
 
     except Exception as e:

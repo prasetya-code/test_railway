@@ -68,11 +68,11 @@ def build_redis_response():
         dependencies = {
             "redis_cache": {
                 "status": "disabled",
-                "message": "Redis cache is disabled via GLOBAL_REDIS",
+                "message": "Redis cache is disabled via global redis",
             },
             "redis_limiter": {
                 "status": "disabled",
-                "message": "Redis limiter is disabled via GLOBAL_REDIS",
+                "message": "Redis limiter is disabled via global redis",
             },
         }
 
