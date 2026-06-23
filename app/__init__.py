@@ -23,7 +23,6 @@ def create_app():
         # register app middleware
         # ===================
 
-
         # register app routes
         # ===================
         from app.routes import register_routes

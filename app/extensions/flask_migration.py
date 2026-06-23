@@ -42,9 +42,9 @@ MIGRATE_INCLUDE_OBJECT = None  # callable atau None
 # =============================================================
 
 ALEMBIC_CONTEXT_OPTS = {
-    "compare_type":           MIGRATE_COMPARE_TYPE,
+    "compare_type": MIGRATE_COMPARE_TYPE,
     "compare_server_default": MIGRATE_COMPARE_SERVER_DEFAULT,
-    "render_as_batch":        MIGRATE_RENDER_AS_BATCH,
+    "render_as_batch": MIGRATE_RENDER_AS_BATCH,
     **({"include_schemas": MIGRATE_INCLUDE_SCHEMAS} if MIGRATE_INCLUDE_SCHEMAS else {}),
     **({"include_object": MIGRATE_INCLUDE_OBJECT} if MIGRATE_INCLUDE_OBJECT else {}),
 }
@@ -54,12 +54,13 @@ ALEMBIC_CONTEXT_OPTS = {
 # BUILDER FUNCTION
 # =============================================================
 
+
 def _build_migrate_config() -> dict:
     """
     Membangun dict konfigurasi untuk Migrate().
     """
     return {
-        "directory":      MIGRATE_DIRECTORY,
+        "directory": MIGRATE_DIRECTORY,
         "render_as_batch": MIGRATE_RENDER_AS_BATCH,
         "configure_args": ALEMBIC_CONTEXT_OPTS,
     }
@@ -68,6 +69,7 @@ def _build_migrate_config() -> dict:
 # =============================================================
 # CORE FUNCTIONS
 # =============================================================
+
 
 def _validate_migrate_config() -> None:
     """
@@ -80,7 +82,9 @@ def _validate_migrate_config() -> None:
         errors.append("MIGRATE_DIRECTORY tidak boleh kosong.")
 
     if not isinstance(MIGRATE_COMPARE_TYPE, bool):
-        errors.append(f"MIGRATE_COMPARE_TYPE harus bool, dapat: '{MIGRATE_COMPARE_TYPE}'")
+        errors.append(
+            f"MIGRATE_COMPARE_TYPE harus bool, dapat: '{MIGRATE_COMPARE_TYPE}'"
+        )
 
     if not isinstance(MIGRATE_COMPARE_SERVER_DEFAULT, bool):
         errors.append(
@@ -137,6 +141,7 @@ def _init_migrate_extension(app) -> None:
 # Wrapper tipis di atas perintah Flask-Migrate CLI —
 # berguna untuk dipakai secara programatik (test, CI/CD, script)
 # =============================================================
+
 
 def run_init(directory: str = MIGRATE_DIRECTORY) -> None:
     """
@@ -259,6 +264,7 @@ def run_history() -> None:
 # =============================================================
 # ENTRYPOINT UTAMA
 # =============================================================
+
 
 def init_migrate(app) -> None:
     """
