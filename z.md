@@ -25,18 +25,27 @@
 Kalau diringkas, stack “clean portfolio Flask”:
 
 ✔ Core
-Flask
-Flask-SQLAlchemy
+
+- Flask
+- Flask-SQLAlchemy
+
+✔ Data / Schema Layer (INI TEMPAT PYDANTIC)
+
+- Pydantic (validation, schema, serialization)
+- (opsional) Marshmallow (alternatif Pydantic)
 
 ✔ Security
-Flask-Talisman
-Flask-Limiter
-Flask-CORS (jika API)
+
+- Flask-Talisman
+- Flask-Limiter
+- Flask-CORS (jika API)
 
 ✔ Performance
-Flask-Compress
-Flask-Caching (opsional)
+
+- Flask-Compress
+- Flask-Caching (opsional)
 
 ✔ Auth
-session -> bawaan flask (session) -> untuk route yang memiliki render
-token -> PyJWT -> untuk route yang berfokus pada api (no render)
+
+- session (Flask built-in) → untuk SSR / render route
+- PyJWT → untuk API (stateless auth)

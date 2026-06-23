@@ -1,6 +1,5 @@
 # flask-talisman memang hanya fokus ke security response headers saja
 
-
 from pathlib import Path
 import os
 import json

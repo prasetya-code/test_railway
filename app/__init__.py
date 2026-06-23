@@ -20,11 +20,8 @@ def create_app():
 
         register_config(core)
 
-        # # register app middleware
-        # # ===================
-        # from app.middleware import register_middleware
-
-        # register_middleware(core)
+        # register app middleware
+        # ===================
 
         # register app routes
         # ===================

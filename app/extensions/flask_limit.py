@@ -1,6 +1,7 @@
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from .redis_client import is_limit_redis_available, REDIS_LIMIT_URL
+from ..utils.redis_utility.redis_config import REDIS_LIMIT_URL
+from ..utils.redis_utility.redis_availability import is_limit_redis_available
 
 import os
 import traceback
@@ -16,7 +17,10 @@ KEY_PREFIX = os.getenv("LIMITER_KEY_PREFIX", "rl:")
 # ENV CONTROL (SECONDARY)
 # =========================
 # Change val env (str) into boolean (TRUE / FALSE)
-USE_REDIS_LIMITER = os.getenv("USE_REDIS_LIMITER", "true").lower() == "true"
+USE_REDIS_LIMITER_RAW = os.getenv("USE_REDIS_LIMITER", "true")
+
+# normalisasi debug-friendly
+USE_REDIS_LIMITER = USE_REDIS_LIMITER_RAW.lower() == "true"
 
 
 # =========================
@@ -35,7 +39,8 @@ def default_key_func():
 # =========================
 # RATE LIMIT STRATEGY (Limiter(strategy=""))
 # =========================
-""" 1. "fixed-window"
+"""
+1. "fixed-window"
    - Menghitung request dalam interval waktu tetap
    - Lebih ringan & sederhana
    - Bisa terjadi burst di awal window
@@ -51,7 +56,8 @@ def default_key_func():
 Catatan:
 - Gunakan "moving-window" untuk akurasi terbaik
 - "fixed-window" cocok jika butuh performa tinggi
-- Strategy ini optimal jika menggunakan Redis (shared storage) """
+- Strategy ini optimal jika menggunakan Redis (shared storage)
+"""
 
 
 # =========================
@@ -72,12 +78,18 @@ fl_limiter = Limiter(
 # =========================
 def init_limiter(app):
     try:
+        print("\n=========================")
+        print("[LIMITER INIT START]")
+        print("=========================\n")
+
         # =========================
         # GLOBAL CONTROL (MASTER SWITCH)
         # =========================
         global_redis = app.config.get("GLOBAL_REDIS", True)
 
-        print(f"[LIMITER] ENV USE_REDIS_LIMITER = {USE_REDIS_LIMITER}")
+        print("[DECISION INPUT]")
+        print(f"[INPUT] app.config GLOBAL_REDIS = {global_redis}")
+        print(f"[INPUT] USE_REDIS_LIMITER       = {USE_REDIS_LIMITER}\n")
 
         # =========================
         # STORAGE DECISION
@@ -87,23 +99,35 @@ def init_limiter(app):
         # 2. ENV (USE_REDIS_LIMITER)
         # 3. Redis availability
         #
+
+        storage_uri = None
+        decision_reason = None
+
         if not global_redis:
-            print("[LIMITER] Disabled Redis")
             storage_uri = "memory://"
+            decision_reason = "GLOBAL_REDIS is False → force memory storage"
+            print("[LIMITER DECISION] Redis DISABLED by GLOBAL_REDIS")
 
         elif not USE_REDIS_LIMITER:
-            print("[LIMITER] Disabled via ENV → using memory storage")
             storage_uri = "memory://"
+            decision_reason = "USE_REDIS_LIMITER is False → force memory storage"
+            print("[LIMITER DECISION] Redis DISABLED by ENV")
 
         else:
-            print("[LIMITER] Checking Redis availability...")
+            print("[LIMITER DECISION] Redis allowed → checking availability...")
 
             if is_limit_redis_available():
-                print("[LIMITER] Using Redis storage")
                 storage_uri = GET_REDIS_URL
+                decision_reason = "Redis available → using Redis storage"
+                print("[LIMITER DECISION] Redis AVAILABLE → USING REDIS")
             else:
-                print("[LIMITER WARNING] Redis not available → fallback to memory")
                 storage_uri = "memory://"
+                decision_reason = "Redis not available → fallback memory"
+                print("[LIMITER WARNING] Redis NOT available → fallback memory")
+
+        print("\n[DECISION RESULT]")
+        print(f"[RESULT] storage_uri = {storage_uri}")
+        print(f"[RESULT] reason      = {decision_reason}")
 
         # =========================
         # APPLY CONFIG
@@ -112,27 +136,36 @@ def init_limiter(app):
         app.config["RATELIMIT_KEY_PREFIX"] = KEY_PREFIX
         app.config["RATELIMIT_SWALLOW_ERRORS"] = True
 
+        print("\n[FLASK CONFIG APPLIED]")
+        print(f"[CONFIG] RATELIMIT_STORAGE_URI = {storage_uri}")
+        print(f"[CONFIG] RATELIMIT_KEY_PREFIX  = {KEY_PREFIX}")
+        print("[CONFIG] SWALLOW_ERRORS        = True")
+
         # =========================
         # INIT LIMITER
         # =========================
         fl_limiter.init_app(app)
 
-        print(f"[LIMITER] Initialized with storage: {storage_uri} \n")
+        print("\n[LIMITER INIT SUCCESS]")
+        print(f"[OK] Limiter initialized using: {storage_uri}\n")
 
     except Exception as e:
-        print(f"[LIMITER ERROR] Failed to initialize limiter: {e}")
+        print(f"\n[LIMITER ERROR] Failed to initialize limiter: {e}")
         traceback.print_exc()
 
         # =========================
         # FALLBACK MANUAL
         # =========================
         try:
-            print("[LIMITER] Falling back to memory storage (manual fallback)")
+            print("\n[FAILSAFE FALLBACK]")
+            print("[FALLBACK] Switching to memory://")
 
             app.config["RATELIMIT_STORAGE_URI"] = "memory://"
 
             fl_limiter.init_app(app)
 
+            print("[FALLBACK SUCCESS] Limiter running in memory mode")
+
         except Exception as fallback_error:
-            print(f"[LIMITER CRITICAL] Fallback failed: {fallback_error}")
+            print(f"[FATAL FALLBACK ERROR] {fallback_error}")
             traceback.print_exc()

@@ -11,7 +11,6 @@ def register_extension(app):
         from .flask_compressing import init_compress
         from .flask_cache import init_cache
         from .flask_limit import init_limiter
-        from .redis_client import start_redis_health_check  # 🔥 tambahan
 
         # =========================
         # GLOBAL CONFIG INJECTION
@@ -19,7 +18,9 @@ def register_extension(app):
         # Ini akan dipakai oleh cache & limiter
         app.config["GLOBAL_REDIS"] = GLOBAL_REDIS
 
-        print(f"[GLOBAL CONFIG] GLOBAL_REDIS Status: {GLOBAL_REDIS}\n")
+        print("\n==========================================")
+        print(f"[GLOBAL CONFIG] GLOBAL_REDIS Status: {GLOBAL_REDIS}")
+        print("==========================================\n")
 
         # =========================
         # INIT EXTENSIONS
@@ -27,12 +28,6 @@ def register_extension(app):
         init_compress(app)
         init_cache(app)
         init_limiter(app)
-
-        # =========================
-        # 🔥 START REDIS HEALTH CHECK
-        # =========================
-        # Hanya jalan jika Redis diaktifkan (True)
-        start_redis_health_check(app.config.get("GLOBAL_REDIS", True))
 
     except Exception as e:
         print("\nEXTENSION gagal di regis dan inisialisasi di create_app()")
