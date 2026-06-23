@@ -1,13 +1,11 @@
 import traceback
 
 from .app_routes import main_bp
-from .monitor_routes import monitor_bp
 from .file_routes import file_bp
 from .data_routes import data_bp
 
 BLUEPRINTS = [
     main_bp,
-    monitor_bp,
     file_bp,
     data_bp,
 ]
