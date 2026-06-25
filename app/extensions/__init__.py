@@ -3,11 +3,11 @@ import traceback
 # =========================
 # 🔥 GLOBAL CONTROL
 # =========================
-GLOBAL_REDIS = False        # True activate redis
+GLOBAL_REDIS = False  # True activate redis
 
 # TALISMAN & CORS harus sama
-GLOBAL_TALISMAN = False     # True activate production
-GLOBAL_CORS = False         # True activate production
+GLOBAL_TALISMAN = False  # True activate production
+GLOBAL_CORS = False  # True activate production
 
 
 def register_extension(app):
@@ -42,7 +42,6 @@ def register_extension(app):
         init_talisman(app)
 
     except Exception as e:
-
         print("\nEXTENSION gagal diregister")
         print("ERROR:", e)
 

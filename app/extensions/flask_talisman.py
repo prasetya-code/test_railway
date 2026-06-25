@@ -1,4 +1,3 @@
-import os
 import traceback
 from flask_talisman import Talisman
 
@@ -12,33 +11,27 @@ fl_talisman = Talisman()
 # =========================
 DEFAULT_CSP = {
     "default-src": ["'self'"],
-
     "base-uri": ["'self'"],
-
     "object-src": ["'none'"],
-
     "frame-ancestors": ["'none'"],
-
-    "script-src": ["'self'", 
-                   # iconify script
-                   "https://code.iconify.design"],
-
+    "script-src": [
+        "'self'",
+        # iconify script
+        "https://code.iconify.design",
+    ],
     "style-src": ["'self'"],
-
-    "img-src": ["'self'", 
-                "data:"],
-
+    "img-src": ["'self'", "data:"],
     "font-src": ["'self'"],
-
-    "connect-src": ["'self'", 
-                    # iconify pre-connect
-                    "https://api.iconify.design"],
-
-
+    "connect-src": [
+        "'self'",
+        # iconify pre-connect
+        "https://api.iconify.design",
+    ],
     # 🔥 HARDENING LAYER
     "upgrade-insecure-requests": [],
     "block-all-mixed-content": [],
 }
+
 
 # =========================
 # INIT TALISMAN (PERFECT VERSION)
@@ -91,7 +84,6 @@ def init_talisman(app):
             "geolocation": "()",
             "payment": "()",
             "usb": "()",
-            
             # deprecated
             # "interest-cohort": "()",
             # "browsing-topics": "()"
@@ -110,33 +102,26 @@ def init_talisman(app):
             # HTTPS
             "force_https": force_https,
             "force_https_permanent": True,
-
             # HSTS (FULL)
             "strict_transport_security": hsts_enabled,
             "strict_transport_security_max_age": 63072000,
             "strict_transport_security_include_subdomains": True,
             "strict_transport_security_preload": True,
-
             # COOKIES
             "session_cookie_secure": not is_dev,
             "session_cookie_http_only": True,
             "session_cookie_samesite": "Lax",
-
             # CLICKJACKING
             "frame_options": frame_mode,
-
             # CSP
             "content_security_policy": DEFAULT_CSP if csp_enabled else None,
-
             # NONCE UNTUK INLINE SCRIPT hanya jika CSP aktif
             "content_security_policy_nonce_in": (
                 ["script-src", "style-src"] if csp_enabled else None
             ),
-
             # HEADERS
             "referrer_policy": referrer_policy,
             "permissions_policy": permissions_policy,
-
             # EXTRA HARDENING
             "force_file_save": False,
         }
@@ -189,9 +174,7 @@ def init_talisman(app):
             # PRODUCTION ONLY
             # =========================
             if not is_dev:
-                response.headers[
-                    "Cross-Origin-Embedder-Policy"
-                ] = "require-corp"
+                response.headers["Cross-Origin-Embedder-Policy"] = "require-corp"
 
             return response
 
@@ -208,15 +191,14 @@ def init_talisman(app):
         print(f"[OK] CSP            : {csp_enabled}")
         print(f"[OK] FRAME POLICY   : {frame_mode}")
         print(f"[OK] COOKIE SECURE  : {not is_dev}")
-        print(f"[OK] X-CTO NOSNIFF  : ENABLED")
-        print(f"[OK] PERMISSIONS    : ENABLED")
-        print(f"[OK] COOP           : ENABLED")
-        print(f"[OK] CORP           : ENABLED")
-        print(f"[OK] OAC            : ENABLED")
+        print("[OK] X-CTO NOSNIFF  : ENABLED")
+        print("[OK] PERMISSIONS    : ENABLED")
+        print("[OK] COOP           : ENABLED")
+        print("[OK] CORP           : ENABLED")
+        print("[OK] OAC            : ENABLED")
 
         if not is_dev:
-            print(f"[OK] COEP           : ENABLED")
-
+            print("[OK] COEP           : ENABLED")
 
         if is_dev:
             print("\n[SECURITY SCORE]")
@@ -227,7 +209,6 @@ def init_talisman(app):
             print("→ ENTERPRISE-GRADE HARDENED 🔥🔥🔥")
 
     except Exception as e:
-
         print("\n=========================")
         print("[TALISMAN ERROR]")
         print("=========================\n")
@@ -253,5 +234,5 @@ def init_talisman(app):
         except Exception as fatal:
             print("[FATAL ERROR]")
             print(fatal)
-            
+
             traceback.print_exc()

@@ -14,13 +14,13 @@ DEFAULT_ALLOWED_ORIGINS = [
     "https://admin.company.com",
 ]
 
+
 # =========================
 # INIT CORS
 # =========================
 def init_cors(app):
 
     try:
-
         print("\n=========================")
         print("[CORS INIT START]")
         print("=========================\n")
@@ -50,102 +50,54 @@ def init_cors(app):
         # DEV CONFIG
         # =========================
         if is_dev:
-
             cors_config = {
-                "resources": {
-                    r"/*": {
-                        "origins": "*"
-                    }
-                },
-
+                "resources": {r"/*": {"origins": "*"}},
                 "supports_credentials": False,
-
-                "methods": [
-                    "GET",
-                    "POST",
-                    "PUT",
-                    "PATCH",
-                    "DELETE",
-                    "OPTIONS"
-                ],
-
+                "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
                 "allow_headers": [
                     "Content-Type",
                     "Authorization",
                     "X-Requested-With",
                     "Accept",
-                    "Origin"
+                    "Origin",
                 ],
-
-                "expose_headers": [
-                    "Content-Type"
-                ],
-
+                "expose_headers": ["Content-Type"],
                 # =========================
                 # CORS OPTIMIZATION
                 # =========================
                 "vary_header": True,
                 "send_wildcard": True,
                 "automatic_options": True,
-
                 # =========================
                 # PREFLIGHT CACHE
                 # =========================
-                "max_age": 600
+                "max_age": 600,
             }
 
         # =========================
         # PROD CONFIG
         # =========================
         else:
-
             allowed_origins = app.config.get(
-                "CORS_ALLOWED_ORIGINS",
-                DEFAULT_ALLOWED_ORIGINS
+                "CORS_ALLOWED_ORIGINS", DEFAULT_ALLOWED_ORIGINS
             )
 
             cors_config = {
-                "resources": {
-                    r"/*": {
-                        "origins": allowed_origins
-                    }
-                },
-
+                "resources": {r"/*": {"origins": allowed_origins}},
                 "supports_credentials": True,
-
-                "methods": [
-                    "GET",
-                    "POST",
-                    "PUT",
-                    "PATCH",
-                    "DELETE",
-                    "OPTIONS"
-                ],
-
-                "allow_headers": [
-                    "Content-Type",
-                    "Authorization",
-                    "Accept",
-                    "Origin"
-                ],
-
-                "expose_headers": [
-                    "Content-Type",
-                    "Content-Length",
-                    "X-Request-ID"
-                ],
-
+                "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+                "allow_headers": ["Content-Type", "Authorization", "Accept", "Origin"],
+                "expose_headers": ["Content-Type", "Content-Length", "X-Request-ID"],
                 # =========================
                 # CORS HARDENING
                 # =========================
                 "vary_header": True,
                 "send_wildcard": False,
                 "automatic_options": True,
-
                 # =========================
                 # PREFLIGHT CACHE
                 # =========================
-                "max_age": 86400
+                "max_age": 86400,
             }
 
         print("\n[CONFIG DUMP]")
@@ -155,10 +107,7 @@ def init_cors(app):
         # =========================
         # APPLY CORS
         # =========================
-        fl_cors.init_app(
-            app,
-            **cors_config
-        )
+        fl_cors.init_app(app, **cors_config)
 
         print("\n=========================")
         print("[CORS INIT SUCCESS]")
@@ -166,30 +115,15 @@ def init_cors(app):
 
         print(f"[OK] MODE            : {mode}")
 
-        print(
-            f"[OK] CREDENTIALS     : "
-            f"{cors_config['supports_credentials']}"
-        )
+        print(f"[OK] CREDENTIALS     : {cors_config['supports_credentials']}")
 
-        print(
-            f"[OK] MAX AGE         : "
-            f"{cors_config['max_age']}"
-        )
+        print(f"[OK] MAX AGE         : {cors_config['max_age']}")
 
-        print(
-            f"[OK] VARY HEADER     : "
-            f"{cors_config['vary_header']}"
-        )
+        print(f"[OK] VARY HEADER     : {cors_config['vary_header']}")
 
-        print(
-            f"[OK] WILDCARD MODE   : "
-            f"{cors_config['send_wildcard']}"
-        )
+        print(f"[OK] WILDCARD MODE   : {cors_config['send_wildcard']}")
 
-        print(
-            f"[OK] AUTO OPTIONS    : "
-            f"{cors_config['automatic_options']}"
-        )
+        print(f"[OK] AUTO OPTIONS    : {cors_config['automatic_options']}")
 
         print("\n[SECURITY LEVEL]")
 
@@ -199,7 +133,6 @@ def init_cors(app):
             print("→ PRODUCTION HARDENED 🔥\n")
 
     except Exception as e:
-
         print("\n=========================")
         print("[CORS ERROR]")
         print("=========================\n")
@@ -208,53 +141,29 @@ def init_cors(app):
         traceback.print_exc()
 
         try:
-
             print("\n[FALLBACK MODE]")
 
             fallback_config = {
-                "resources": {
-                    r"/*": {
-                        "origins": "*"
-                    }
-                },
-
+                "resources": {r"/*": {"origins": "*"}},
                 "supports_credentials": False,
-
-                "methods": [
-                    "GET",
-                    "POST",
-                    "PUT",
-                    "PATCH",
-                    "DELETE",
-                    "OPTIONS"
-                ],
-
-                "allow_headers": [
-                    "Content-Type",
-                    "Authorization"
-                ],
-
+                "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+                "allow_headers": ["Content-Type", "Authorization"],
                 "vary_header": True,
                 "send_wildcard": True,
                 "automatic_options": True,
-
-                "max_age": 300
+                "max_age": 300,
             }
 
             print("[FALLBACK CONFIG]")
             for k, v in fallback_config.items():
                 print(f"[FALLBACK] {k} = {v}")
 
-            fl_cors.init_app(
-                app,
-                **fallback_config
-            )
+            fl_cors.init_app(app, **fallback_config)
 
             print("\n[FALLBACK SUCCESS]")
             print("[OK] Minimal CORS mode active")
 
         except Exception as fatal:
-
             print("\n[FATAL ERROR]")
             print(fatal)
             traceback.print_exc()
