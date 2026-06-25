@@ -65,12 +65,13 @@ def register_config(app):
             app_logger.info("Flask is restarting...")
             app_logger.info("Log Start ...")
 
-        # =========================
-        # STATIC VERSION
-        # =========================
-        from config.static_ver import apply_static_versioning
+        # # CACHE BUSTING BERMASALAH
+        # # =========================
+        # # STATIC VERSION
+        # # =========================
+        # from config.static_ver import apply_static_versioning
 
-        apply_static_versioning(app)
+        # apply_static_versioning(app)
 
     except Exception as e:
         print("\nLOGGER gagal diinisialisasi di create_app()")

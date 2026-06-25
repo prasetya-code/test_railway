@@ -18,7 +18,7 @@ def apply_static_versioning(app_or_bp):
          akan mengambil versi baru, bukan cache lama.
     """
 
-    # Atur agar browser bisa menyimpan file static hingga 1 tahun
+    # Atur agar browser bisa menyimpan file static
     app_or_bp.config["SEND_FILE_MAX_AGE_DEFAULT"] = 31536000  # detik (365 hari)
 
     # Context processor: menambahkan fungsi custom ke dalam semua template Jinja
