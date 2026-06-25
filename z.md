@@ -16,6 +16,22 @@
 
 - ** itu untuk unpack (membongkar) isi dictionary dan menggabungkannya ke dalam dictionary baru.
 
+> flask talisman yang sudah ada belum menerapkan:
+ - CSP dev → REPORT-ONLY (bukan OFF total)
+ - COEP hanya aktif di production
+ - COOP/CORP tetap aman tapi lebih fleksibel di dev
+ - Tambahkan hook security_event() untuk CSP violation (tanpa endpoint baru)
+ - Dev mode lebih “debug-friendly” tanpa mengurangi keamanan dasar
+
+> csp
+| Error Console Browser            | Tambahkan ke                    |
+| -------------------------------- | ------------------------------- |
+| `Refused to load the script`     | `script-src`                    |
+| `Refused to load the stylesheet` | `style-src`                     |
+| `Refused to load the image`      | `img-src`                       |
+| `Refused to load the font`       | `font-src`                      |
+| `Refused to connect`             | `connect-src`                   |
+| `Refused to frame`               | `frame-src` / `frame-ancestors` |
 
 
 # CORE

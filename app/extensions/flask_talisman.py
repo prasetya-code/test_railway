@@ -14,14 +14,26 @@ DEFAULT_CSP = {
     "default-src": ["'self'"],
 
     "base-uri": ["'self'"],
+
     "object-src": ["'none'"],
+
     "frame-ancestors": ["'none'"],
 
-    "script-src": ["'self'"],
+    "script-src": ["'self'", 
+                   # iconify script
+                   "https://code.iconify.design"],
+
     "style-src": ["'self'"],
-    "img-src": ["'self'", "data:"],
+
+    "img-src": ["'self'", 
+                "data:"],
+
     "font-src": ["'self'"],
-    "connect-src": ["'self'"],
+
+    "connect-src": ["'self'", 
+                    # iconify pre-connect
+                    "https://api.iconify.design"],
+
 
     # 🔥 HARDENING LAYER
     "upgrade-insecure-requests": [],
@@ -79,8 +91,10 @@ def init_talisman(app):
             "geolocation": "()",
             "payment": "()",
             "usb": "()",
-            "interest-cohort": "()",
-            "browsing-topics": "()"
+            
+            # deprecated
+            # "interest-cohort": "()",
+            # "browsing-topics": "()"
         }
 
         print("\n[SECURITY DECISION]")
@@ -113,6 +127,11 @@ def init_talisman(app):
 
             # CSP
             "content_security_policy": DEFAULT_CSP if csp_enabled else None,
+
+            # NONCE UNTUK INLINE SCRIPT hanya jika CSP aktif
+            "content_security_policy_nonce_in": (
+                ["script-src", "style-src"] if csp_enabled else None
+            ),
 
             # HEADERS
             "referrer_policy": referrer_policy,
